@@ -40,7 +40,10 @@
 		<h2>Mes Projets</h2>
 		<div class="filter-container">
 			<ul>
-				<li class="selected"><a>Tous</a></li>
+				<li class="filter-item selected">
+					<a id="filter_all" href="#portfolio" onclick="LoadWorksFromCategoryToGallery(0);">Tous</a>
+				</li>
+				<!-- Le reste des filtres sera chargé par l'API -->
 			</ul>
 		</div>
 		<div class="gallery">
