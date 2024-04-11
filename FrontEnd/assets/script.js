@@ -35,6 +35,8 @@ function LoadAllWorksToDom(works){
     
     // Efface le contenu de la galerie
     gallery.innerHTML = "";
+    
+    //S'il n'y a aucun works à charger alors on sort de la fonction
     if (works.length === 0)
         return;
     
