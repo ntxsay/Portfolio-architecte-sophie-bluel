@@ -142,12 +142,11 @@ function ClearFilterCategories(categoryList) {
             return;
         }
 
-        //Récupération du premier noeud enfant
-        const childrenNode = childNode.firstChild;
+        //Selectionne le premier enfant de type A
+        const childrenNode = childNode.querySelector("a");
 
-        //Si le noeud n'est pas un noeud A ou son texte n'est pas strictement égal à Tous
-        //Alors on supprime le parent
-        if (childrenNode.nodeName !== "A" || childrenNode.innerText !== "Tous") {
+        //Si l'id du noeud ne correspond à celui du filtre tous alors on le supprime
+        if (childrenNode.id !== "filter_all") {
             categoryList.removeChild(childNode);
         }
     });
