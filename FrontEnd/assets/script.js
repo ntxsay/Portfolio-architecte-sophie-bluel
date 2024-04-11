@@ -51,7 +51,7 @@ function LoadAllWorksToDom(works){
         //Ajoute l'image à la figure
         figureHtmlElement.appendChild(imageHtmlElement);
         
-        // Création duu noeud figCaption deuxième enfant
+        // Création du noeud figCaption deuxième enfant
         const captionHtmlElement = document.createElement("figcaption");
         captionHtmlElement.innerText = work.title;
         
