@@ -58,14 +58,6 @@ function LoadAllWorksToDom(works){
         //Ajoute le caption à la figure
         figureHtmlElement.appendChild(captionHtmlElement);
         
-        //Autre Alternative
-            /*`
-            <figure>
-                <img src="${work.imageUrl}" alt="${work.title}" />
-                <figcaption>${work.title}</figcaption>
-            </figure>
-            `;*/
-        
         //Ajoute la balise à gallery
         gallery.appendChild(figureHtmlElement);
     })
