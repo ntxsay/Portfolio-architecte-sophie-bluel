@@ -6,6 +6,7 @@ loginForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const connexionStatusErrorSpan = loginForm.querySelector(".connexion-error");
+    connexionStatusErrorSpan.innerText = "";
     
     // Même si l'attribut required est présent sur les balise input on revérifie quand même en js
     const emailInput = loginForm.querySelector('#email');
@@ -16,6 +17,7 @@ loginForm.addEventListener("submit", (event) => {
             event.preventDefault();
         }
     }
+    //ajouter une vérification de l'email avec les expressions régulières
     
     const passwordInput = loginForm.querySelector("#password");
     const passwordInputValue = passwordInput.value;
@@ -42,16 +44,42 @@ loginForm.addEventListener("submit", (event) => {
     fetch('http://localhost:5678/api/users/login', requestOptions)
         .then(response => {
             if (!response.ok) {
-                throw new Error('Erreur lors de la requête');
+                switch (response.status) {
+                    case 401 : {
+                        throw new Error("Vous n'êtes pas autorisé a accéder à cette ressource.");
+                    }
+                    case 404 : {
+                        throw new Error("Erreur dans l’identifiant ou le mot de passe.");
+                    }
+                    default : {
+                        throw new Error(response.statusMessage);
+                    }
+                }
             }
-            return response.json(); // Renvoie les données de réponse JSON si la requête est réussie
+            
+            //Convertit la réponse en objet json
+            return response.json(); 
         })
         .then(data => {
-            // Gérer la réponse de la requête (par exemple, redirection, affichage de messages, etc.)
-            console.log(data); // Afficher les données de réponse JSON
+            GetLoginToken(data);
         })
         .catch(error => {
-            // Gérer les erreurs de la requête
             console.error('Erreur :', error);
+            if (error.message.includes("Failed to fetch")) {
+                connexionStatusErrorSpan.innerText = "Impossible de contacter le serveur.";
+                return;
+            }
+            connexionStatusErrorSpan.innerText = error.message;
         });
 });
+
+function GetLoginToken(loginResponse){
+    
+    const token = loginResponse.token;
+    console.log(token);
+    
+    //dans l'attente d'une meilleure alternative le token est stocké dans le stockage locale
+    window.localStorage.setItem("token", token);
+    
+    window.location.href = "/";
+}

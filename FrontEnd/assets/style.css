@@ -251,6 +251,15 @@ li:hover {
     box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
 
+#log_in .connexion-error {
+    display: inline-block;
+    margin: 2em 0 0 0;
+    font-size: 1.2em;
+    color: orangered;
+    font-weight: 700;
+    text-align: center;
+}
+
 #contact label,
 #log_in label {
     margin: 2em 0 1em 0;
