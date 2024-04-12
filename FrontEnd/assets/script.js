@@ -1,23 +1,23 @@
+const categoriesLocalStorageName = "categories";
+const worksLocalStorageName = "works";
 /**
  * Obtient ou définit un tableau contenant les catégories
- * @type {*[]}
  */
-let Categories = [];
+const CategoriesSet = new Set();
 
 /**
  * Obtient ou définit un tableau de works
- * @type {*[]}
  */
-let Works = [];
+const WorksSet = new Set();
 
 /*
  * Evenement se déclanchant lorsque DOM est entièrement chargé et analysé, 
  * sans attendre le chargement complet des ressources externes telles que les images, 
  * les feuilles de style et les scripts externes.
  */
-document.addEventListener('DOMContentLoaded', function () {
-    LoadAllCategoriesFromApi();
-    LoadAllWorksFromApi();
+document.addEventListener('DOMContentLoaded', async function () {
+    await LoadAllCategoriesFromApi();
+    await LoadAllWorksFromApi();
 });
 
 /*******************Fetch*******************************************/
@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', function () {
 /**
  * Récupère toutes les catégories depuis l'API
  */
-function LoadAllCategoriesFromApi() {
-    fetch('http://localhost:5678/api/categories')
+async function LoadAllCategoriesFromApi() {
+    await fetch('http://localhost:5678/api/categories')
         .then(response => {
             //si le GET n'a pas réussi alors on lève une exception 
             if (!response.ok) {
@@ -38,8 +38,8 @@ function LoadAllCategoriesFromApi() {
         })
         .then(categories => {
 
-            // On sauvegarde les catégories en mémoire
-            Categories = categories;
+            // On met à jour les catégorie localement et dans la variable globale CategoriesSet
+            UpdateCategories(categories);
 
             // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
             LoadAllCategoriesToDom(categories);
@@ -47,14 +47,17 @@ function LoadAllCategoriesFromApi() {
         .catch(error => {
             // Affiche dans la console l'erreur
             console.error('Erreur lors de la récupération des catégories:', error);
+
+            //On tente d'afficher localement les catégories
+            LoadOfflineCategories();
         });
 }
 
 /**
  * Récupère tous les works depuis l'API
  */
-function LoadAllWorksFromApi() {
-    fetch('http://localhost:5678/api/works')
+async function LoadAllWorksFromApi() {
+    await fetch('http://localhost:5678/api/works')
         .then(response => {
             //si le GET n'a pas réussi alors on lève une exception 
             if (!response.ok) {
@@ -65,23 +68,48 @@ function LoadAllWorksFromApi() {
             return response.json();
         })
         .then(works => {
-            // On sauvegarde tous les works en mémoire
-            Works = works;
+            // On met à jour les works localement et dans la variable globale WorksSet
+            UpdateWorks(works);
+
             // On récupère tous les works pour les afficher dans le dom via la fonction suivante
             LoadWorksToGallery(works);
         })
         .catch(error => {
             // Affiche dans la console l'erreur
             console.error('Erreur lors de la récupération des works:', error);
+
+            LoadOfflineWorks();
         });
 }
 
 /*******************Catégories*******************************************/
 
+/**
+ * Charge les catégories stcokées localement
+ */
+function LoadOfflineCategories() {
+
+    //Retourne une variable de type string contenant les catégories au format JSON si elle existe
+    const localStorageCategories = window.localStorage.getItem(categoriesLocalStorageName);
+
+    //Sinon on écrit un message d'erreur et on sort de la function
+    if (localStorageCategories === null || localStorageCategories === "{}") {
+        console.error("impossible de charger les catégories en hors-ligne.");
+        window.localStorage.removeItem(categoriesLocalStorageName);
+        return;
+    }
+
+    //Convertit la chaine en objet json
+    const localCategories = JSON.parse(localStorageCategories);
+
+    // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
+    LoadAllCategoriesToDom(localCategories);
+}
+
 
 /**
  * Ajoute les Catégories à la liste des filtres dans le DOM
- * @param categories Tableau de Catégories chargé depuis l'API
+ * @param {Array} categories Tableau de Catégories chargé depuis l'API
  */
 function LoadAllCategoriesToDom(categories) {
 
@@ -89,7 +117,7 @@ function LoadAllCategoriesToDom(categories) {
     const categoryList = document.querySelector("#portfolio .filter-container ul");
 
     //Efface les filtres à l'exception du filtre "Tous"
-    ClearFilterCategories(categoryList);
+    ClearFilterCategoriesFromDom(categoryList);
 
     //S'il n'y a aucune catégorie à charger alors on sort de la fonction
     if (categories.length === 0)
@@ -104,13 +132,13 @@ function LoadAllCategoriesToDom(categories) {
 
         //définit l'id du filtre
         const aLinkId = "filter_" + category.id.toString();
-        
+
         // Création du noeud A enfant du noeud LI
         const aLinkHtmlElement = document.createElement("a");
         aLinkHtmlElement.innerText = category.name;
         aLinkHtmlElement.id = aLinkId;
         aLinkHtmlElement.href = "#portfolio";
-        
+
         //Ajoute l'évenement clic pour afficher les données selon cette catégorie
         aLinkHtmlElement.onclick = () => {
             LoadWorksFromCategoryToGallery(category.id);
@@ -126,19 +154,19 @@ function LoadAllCategoriesToDom(categories) {
 
 /**
  * Efface la liste des filtres du DOM
- * @param {Element} categoryList Représente le noeud UL contenant les filtres
+ * @param {Element} ulCategoryList Représente le noeud UL contenant les filtres
  */
-function ClearFilterCategories(categoryList) {
+function ClearFilterCategoriesFromDom(ulCategoryList) {
 
     // Crée un tableau d'enfant du UL ne contenant que les LI, 
     // afin d'éviter de modifier directement le UL pendant l'énumeration de ses enfants 
-    const childNodeArray = Array.from(categoryList.childNodes).filter(node => node.nodeName === 'LI');
+    const childNodeArray = Array.from(ulCategoryList.childNodes).filter(node => node.nodeName === 'LI');
 
     // Efface les filtres du DOM
     childNodeArray.forEach((childNode) => {
         // si le li n'a pas d'enfant (donc pas de noeud A) alors on supprime le LI
         if (!childNode.hasChildNodes()) {
-            categoryList.removeChild(childNode);
+            ulCategoryList.removeChild(childNode);
             return;
         }
 
@@ -147,12 +175,85 @@ function ClearFilterCategories(categoryList) {
 
         //Si l'id du noeud ne correspond à celui du filtre tous alors on le supprime
         if (childrenNode.id !== "filter_all") {
-            categoryList.removeChild(childNode);
+            ulCategoryList.removeChild(childNode);
         }
     });
 }
 
+/**
+ * Met à jour la liste des catégories dans le stockage local
+ * @param {Array} categories
+ */
+function UpdateCategories(categories) {
+    //On efface le contenu précédent du tableau de catégories
+    CategoriesSet.clear();
+
+    // S'il n'y a pas de catégories à charger (depuis l'API)
+    // Alors on efface les catégories dans le stockage local
+    if (categories.length === 0) {
+        window.localStorage.removeItem(categoriesLocalStorageName)
+        return;
+    }
+
+    //On ajoute les nouveau works dans le tableau
+    for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        CategoriesSet.add(category);
+    }
+
+    //On enregistre le tableau dans le stockage local au format string json
+    window.localStorage.setItem(categoriesLocalStorageName, JSON.stringify(Array.from(CategoriesSet)));
+}
+
 /*******************Works*******************************************/
+
+/**
+ * Met à jour la liste des catégories dans le stockage local
+ * @param {Array} works
+ */
+function UpdateWorks(works) {
+
+    //On efface le contenu précédent du tableau de works
+    WorksSet.clear();
+
+    // S'il n'y a pas de work à charger (depuis l'API)
+    // Alors on efface les works dans le stockage local
+    if (works.length === 0) {
+        window.localStorage.removeItem(worksLocalStorageName)
+        return;
+    }
+
+    //On ajoute les nouveau works dans le tableau
+    for (let i = 0; i < works.length; i++) {
+        const work = works[i];
+        WorksSet.add(work);
+    }
+
+    //On enregistre le tableau dans le stockage local au format string json
+    window.localStorage.setItem(worksLocalStorageName, JSON.stringify(Array.from(WorksSet)));
+}
+
+/**
+ * Charge les works stockées localement
+ */
+function LoadOfflineWorks() {
+
+    //Retourne une variable de type string contenant les works au format JSON si elle existe
+    const localStorageWorks = window.localStorage.getItem(worksLocalStorageName);
+
+    //Sinon on écrit un message d'erreur et on sort de la function
+    if (localStorageWorks === null || localStorageWorks === "{}") {
+        console.error("impossible de charger les works en hors-ligne.");
+        return;
+    }
+
+    //Convertit la chaine en objet json
+    const localWorks = JSON.parse(localStorageWorks);
+
+    // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
+    LoadWorksToGallery(localWorks);
+}
+
 
 /**
  * Ajoute tous les works à la galerie dans le DOM
@@ -223,7 +324,7 @@ function LoadWorksFromCategoryToGallery(idCategory) {
         filterToSelect.classList.add("selected");
 
     //Retourne les works qui ont l'id de catégorie spécifié
-    const worksInCategory = idCategory <= 0 ? Works : Works.filter(work => work.categoryId === idCategory);
+    const worksInCategory = idCategory <= 0 ? WorksSet : Array.from(WorksSet).filter(work => work.categoryId === idCategory);
 
     //Charge les works dans la galerie
     LoadWorksToGallery(worksInCategory);
