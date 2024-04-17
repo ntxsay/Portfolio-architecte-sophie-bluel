@@ -1,4 +1,33 @@
 /**
+ * Récupère tous les works depuis l'API
+ */
+async function LoadAllWorksFromApi() {
+    await fetch('http://localhost:5678/api/works')
+        .then(response => {
+            //si le GET n'a pas réussi alors on lève une exception 
+            if (!response.ok) {
+                throw new Error(response.statusMessage);
+            }
+
+            //sinon convertit la réponse au format json et retourne la réponse
+            return response.json();
+        })
+        .then(async (works) =>  {
+            // On met à jour les works localement et dans la variable globale WorksSet
+            await UpdateWorks(works);
+
+            // On récupère tous les works pour les afficher dans le dom via la fonction suivante
+            LoadWorksToGallery(works);
+        })
+        .catch(error => {
+            // Affiche dans la console l'erreur
+            console.error('Erreur lors de la récupération des works:', error);
+
+            LoadOfflineWorks();
+        });
+}
+
+/**
  * Met à jour la liste les works dans le stockage local
  * @param {Array} works
  */
@@ -138,7 +167,13 @@ function CreateOrRemoveWorksEditorUi(isRemove){
     
     // création de l'élément a
     worksEditorLinkElement = document.createElement("a");
-    worksEditorLinkElement.classList.add("works-editor-link");
+    
+    //Ancre représentant le modal à ouvrir
+    worksEditorLinkElement.href = "#works-Editor-modal";
+    worksEditorLinkElement.id = "works-editor-link";
+    
+    //Ajoute la classe qui indique que ce lien pointe vers un modal
+    worksEditorLinkElement.classList.add("a-modal");
 
     // Création de l'élément i;
     const iconElement = document.createElement("i");

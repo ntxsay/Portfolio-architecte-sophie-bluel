@@ -1,5 +1,6 @@
 const categoriesLocalStorageName = "categories";
 const worksLocalStorageName = "works";
+
 /**
  * Obtient ou définit un tableau contenant les catégories
  */
@@ -12,6 +13,46 @@ const WorksSet = new Set();
 
 const loginLinkElement = document.getElementById("loginLink");
 
+/**
+ * Obtient ou définit la modale actuellement ouvert
+ */
+let currentOpenedModal;
+
+const openModal = function (eventClick) {
+    eventClick.preventDefault();
+    
+    const aElement =  (eventClick.target.nodeName !== "A")
+        ? eventClick.target.parentElement
+        : eventClick.target;
+    
+    const target = document.querySelector(aElement.getAttribute("href"));
+    if (target.classList.contains("closed"))
+        target.classList.remove("closed");
+    
+    target.setAttribute("aria-hidden", "false");
+    target.setAttribute("aria-modal", "true");
+    
+    //Définit la modale actuellement ouverte
+    currentOpenedModal = target;
+    currentOpenedModal.addEventListener('click', closeModal);
+};
+
+const closeModal = function (eventClick) {
+    eventClick.preventDefault();
+
+if (currentOpenedModal === null)
+    return;
+
+    if (!currentOpenedModal.classList.contains("closed"))
+        currentOpenedModal.classList.add("closed");
+
+    currentOpenedModal.setAttribute("aria-hidden", "true");
+    currentOpenedModal.setAttribute("aria-modal", "false");
+    
+    //Efface la modale actuellement ouverte
+    currentOpenedModal = null;
+};
+
 /*
  * Evenement se déclanchant lorsque DOM est entièrement chargé et analysé, 
  * sans attendre le chargement complet des ressources externes telles que les images, 
@@ -19,10 +60,15 @@ const loginLinkElement = document.getElementById("loginLink");
  */
 document.addEventListener('DOMContentLoaded', async function () {
     LoadLoginUi();
-    
+
     await LoadAllCategoriesFromApi();
     await LoadAllWorksFromApi();
+
+    document.querySelectorAll(".a-modal").forEach(element => {
+        element.addEventListener('click', openModal);
+    });
 });
+
 
 loginLinkElement.addEventListener('click', function() {
 
@@ -38,68 +84,6 @@ loginLinkElement.addEventListener('click', function() {
 });
 
 
-
-/*******************Fetch*******************************************/
-
-/**
- * Récupère toutes les catégories depuis l'API
- */
-async function LoadAllCategoriesFromApi() {
-    await fetch('http://localhost:5678/api/categories')
-        .then(response => {
-            //si le GET n'a pas réussi alors on lève une exception 
-            if (!response.ok) {
-                throw new Error(response.statusMessage);
-            }
-
-            //sinon convertit la réponse au format json et retourne la réponse
-            return response.json();
-        })
-        .then(categories => {
-
-            // On met à jour les catégorie localement et dans la variable globale CategoriesSet
-            UpdateCategories(categories);
-
-            // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
-            LoadAllCategoriesToDom(categories);
-        })
-        .catch(error => {
-            // Affiche dans la console l'erreur
-            console.error('Erreur lors de la récupération des catégories:', error);
-
-            //On tente d'afficher localement les catégories
-            LoadOfflineCategories();
-        });
-}
-
-/**
- * Récupère tous les works depuis l'API
- */
-async function LoadAllWorksFromApi() {
-    await fetch('http://localhost:5678/api/works')
-        .then(response => {
-            //si le GET n'a pas réussi alors on lève une exception 
-            if (!response.ok) {
-                throw new Error(response.statusMessage);
-            }
-
-            //sinon convertit la réponse au format json et retourne la réponse
-            return response.json();
-        })
-        .then(async (works) =>  {
-            // On met à jour les works localement et dans la variable globale WorksSet
-            await UpdateWorks(works);
-
-            // On récupère tous les works pour les afficher dans le dom via la fonction suivante
-            LoadWorksToGallery(works);
-        })
-        .catch(error => {
-            // Affiche dans la console l'erreur
-            console.error('Erreur lors de la récupération des works:', error);
-
-            LoadOfflineWorks();
-        });
-}
 
 function LoadLoginUi(){
     const tokenValue = window.localStorage.getItem("token");

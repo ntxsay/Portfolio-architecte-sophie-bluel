@@ -1,4 +1,35 @@
 /**
+ * Récupère toutes les catégories depuis l'API
+ */
+async function LoadAllCategoriesFromApi() {
+    await fetch('http://localhost:5678/api/categories')
+        .then(response => {
+            //si le GET n'a pas réussi alors on lève une exception 
+            if (!response.ok) {
+                throw new Error(response.statusMessage);
+            }
+
+            //sinon convertit la réponse au format json et retourne la réponse
+            return response.json();
+        })
+        .then(categories => {
+
+            // On met à jour les catégorie localement et dans la variable globale CategoriesSet
+            UpdateCategories(categories);
+
+            // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
+            LoadAllCategoriesToDom(categories);
+        })
+        .catch(error => {
+            // Affiche dans la console l'erreur
+            console.error('Erreur lors de la récupération des catégories:', error);
+
+            //On tente d'afficher localement les catégories
+            LoadOfflineCategories();
+        });
+}
+
+/**
  * Charge les catégories stcokées localement
  */
 function LoadOfflineCategories() {

@@ -103,6 +103,7 @@ function GetLoginToken(loginResponse){
 
 function SetToAuthenticatedOnDOM(){
     loginLinkElement.innerText = "logout";
+    
 }
 
 function SetToNotAuthenticatedOnDom() {
