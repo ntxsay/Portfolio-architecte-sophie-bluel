@@ -20,6 +20,8 @@ let currentOpenedModal;
 
 const openModal = function (eventClick) {
     eventClick.preventDefault();
+
+    LoadWorksToWorksModal(Array.from(WorksSet));
     
     const aElement =  (eventClick.target.nodeName !== "A")
         ? eventClick.target.parentElement
@@ -41,6 +43,11 @@ const closeModal = function (eventClick) {
     eventClick.preventDefault();
 
 if (currentOpenedModal === null)
+    return;
+
+//Si la cible du click n'est pas la zone extérieure noir ou le lien pour fermer ou l'icon alors on sort de la function
+if (!eventClick.target.classList.contains("modal") && !eventClick.target.classList.contains("modal-close-link") && 
+    !eventClick.target.classList.contains("modal-close-icon"))
     return;
 
     if (!currentOpenedModal.classList.contains("closed"))

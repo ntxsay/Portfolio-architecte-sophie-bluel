@@ -372,35 +372,67 @@ footer nav ul {
     margin: 20px 79px;
 }
 
-/***** Works Editor Modal *****/
-
-.modal ul.works-manager-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    list-style: none;
-    gap: 29px 9px;
+.modal .modal-content-container .rule {
+    background-color: #B3B3B3;
+    height: 1px;
+    margin-top: 67px;
 }
 
-ul.works-manager-list li.work-item {
+.modal .modal-buttons-container {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-buttons-container a {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    background-color: #1D6154;
+    margin: 2em auto;
+    width: 180px;
+    text-align: center;
+    border-radius: 60px;
+    padding: 12px 40px;
+    display: block;
+
+}
+
+.modal-buttons-container a span {
+}
+
+/***** Works Editor Modal *****/
+
+.modal .works-manager-list-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    list-style: none;
+    row-gap: 29px;
+}
+
+.works-manager-list-container .work-item {
     width: 18%;
     position: relative;
 }
 
-li.work-item img {
+.work-item img {
     width: 100%;
 }
 
-li.work-item a {
+.work-item a {
     position: absolute;
     top: 6px;
     right: 5px;
     padding: 3px 4px;
     background-color: black;
     border-radius: 2px;
+    color: white;
+    text-decoration: none;
 }
 
-li.work-item span i {
+.work-item span i {
     color: white;
     font-size: 11px;
 }
