@@ -2,18 +2,21 @@
 <html lang="fr">
 <head>
 	<meta charset="UTF-8">
-	<title>Sophie Bluel - Architecte d'i ntérieur</title>
+	<title>Sophie Bluel - Architecte d'intérieur</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<!--Ajout des poids 400, 600, 700 et 800 pour Work sans-->
 	<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Work+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"
+		  integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w=="
+		  crossorigin="anonymous" referrerpolicy="no-referrer"/>
 	<meta name="description" content="">
 	<link rel="stylesheet" href="./assets/style.css">
 	<!-- Ajout du fichier javascript à chargement différé -->
 	<script src="./assets/scripts/works.js" defer></script>
 	<script src="./assets/scripts/categories.js" defer></script>
-	<script src="./assets/script.js" defer></script>
+	<script src="./assets/index.js" defer></script>
 </head>
 <body>
 <header>
@@ -22,7 +25,7 @@
 		<ul>
 			<li><a href="#portfolio">projets</a></li>
 			<li><a href="#contact">contact</a></li>
-			<li><a href="login.html">login</a></li>
+			<li><a href="#" id="loginLink">login</a></li>
 			<li><img src="./assets/icons/instagram.png" alt="Instagram"></li>
 		</ul>
 	</nav>
@@ -40,7 +43,10 @@
 		</article>
 	</section>
 	<section id="portfolio">
-		<h2>Mes Projets</h2>
+		<div class="title-container">
+			<h2>Mes Projets</h2>
+			<!--<a class="works-editor-link" href="#"><i class="fa-solid fa-pen-to-square"></i><span>modifier</span></a>-->
+		</div>
 		<div class="filter-container">
 			<ul>
 				<li class="filter-item selected">
@@ -75,5 +81,8 @@
 		</ul>
 	</nav>
 </footer>
+<aside id="works-Editor-modal">
+	
+</aside>
 </body>
 </html>

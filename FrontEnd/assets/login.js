@@ -1,5 +1,19 @@
 const loginForm = document.querySelector("#log_in  form");
 
+const loginLinkElement = document.getElementById("loginLink");
+loginLinkElement.addEventListener('click', function() {
+
+    const tokenValue = window.localStorage.getItem("token");
+    if (tokenValue === null || tokenValue === "") {
+        window.location.href = "login.html";
+        SetToAuthenticatedOnDOM();
+    } else {
+           window.localStorage.removeItem("token");
+           window.location.href = "index.html";
+           SetToNotAuthenticatedOnDom();
+    }
+});
+
 // Ajout de l'évenement lorsque j'appuis sur le bouton se connecter 
 loginForm.addEventListener("submit", (event) => {
     // empêche le comportement par défaut du formulaire
@@ -81,5 +95,16 @@ function GetLoginToken(loginResponse){
     //dans l'attente d'une meilleure alternative le token est stocké dans le stockage locale
     window.localStorage.setItem("token", token);
     
-    window.location.href = "/";
+    window.location.href = "index.html";
+
+    SetToAuthenticatedOnDOM();
+    
+}
+
+function SetToAuthenticatedOnDOM(){
+    loginLinkElement.innerText = "logout";
+}
+
+function SetToNotAuthenticatedOnDom() {
+    
 }

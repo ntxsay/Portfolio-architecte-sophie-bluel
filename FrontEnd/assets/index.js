@@ -10,15 +10,34 @@ const CategoriesSet = new Set();
  */
 const WorksSet = new Set();
 
+const loginLinkElement = document.getElementById("loginLink");
+
 /*
  * Evenement se déclanchant lorsque DOM est entièrement chargé et analysé, 
  * sans attendre le chargement complet des ressources externes telles que les images, 
  * les feuilles de style et les scripts externes.
  */
 document.addEventListener('DOMContentLoaded', async function () {
+    LoadLoginUi();
+    
     await LoadAllCategoriesFromApi();
     await LoadAllWorksFromApi();
 });
+
+loginLinkElement.addEventListener('click', function() {
+
+    const tokenValue = window.localStorage.getItem("token");
+    if (tokenValue === null || tokenValue === "") {
+        window.location.href = "login.html";
+        SetToAuthenticatedOnDOM();
+    } else {
+        window.localStorage.removeItem("token");
+        window.location.href = "index.html";
+        SetToNotAuthenticatedOnDom();
+    }
+});
+
+
 
 /*******************Fetch*******************************************/
 
@@ -80,6 +99,17 @@ async function LoadAllWorksFromApi() {
 
             LoadOfflineWorks();
         });
+}
+
+function LoadLoginUi(){
+    const tokenValue = window.localStorage.getItem("token");
+    if (tokenValue === null || tokenValue === "") {
+        loginLinkElement.innerText = "login";
+        CreateOrRemoveWorksEditorUi(true);
+    } else {
+        loginLinkElement.innerText = "logout";
+        CreateOrRemoveWorksEditorUi(false);
+    }
 }
 
 

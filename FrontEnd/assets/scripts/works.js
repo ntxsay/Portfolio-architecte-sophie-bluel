@@ -16,13 +16,7 @@ async function UpdateWorks(works) {
 
     //On ajoute les nouveau works dans le tableau
     for (let i = 0; i < works.length; i++) {
-        const work = works[i];
-
-        const imageBase64 = await ConvertImageToBase64(work.imageUrl);
-        const localStorageImgBase64 = GetWorkBase64ImageLocalStorageName(work.id);
-        
-        window.localStorage.setItem(localStorageImgBase64, imageBase64.toString());
-        WorksSet.add(work);
+        WorksSet.add(works[i]);
     }
 
     //On enregistre le tableau dans le stockage local au format string json
@@ -75,20 +69,7 @@ function LoadWorksToGallery(works) {
         // Création du noeud Img premier enfant
         const imageHtmlElement = document.createElement("img");
         imageHtmlElement.alt = work.title;
-
-        // Retourne le nom du localStorage contenant l'image en base64
-        const localStorageImgBase64 = GetWorkBase64ImageLocalStorageName(work.id);
-
-
-        //Retourne une variable de type string contenant la base64 du work si elle existe
-        const localStorageImageBase64Work = window.localStorage.getItem(localStorageImgBase64);
-
-        //Sinon on écrit un message d'erreur et on sort de la function
-        if (localStorageImageBase64Work === null || localStorageImageBase64Work === "{}") {
-            imageHtmlElement.src = work.imageUrl;
-        } else {
-            imageHtmlElement.src = localStorageImageBase64Work;
-        }
+        imageHtmlElement.src = work.imageUrl;
         
         //Ajoute l'image à la figure
         figureHtmlElement.appendChild(imageHtmlElement);
@@ -140,43 +121,39 @@ function LoadWorksFromCategoryToGallery(idCategory) {
 }
 
 /**
- *
- * @param {string} imageUrl
+ * Ajoute le lien pour afficher la modale d'édition des Works
+ * @param {boolean} isRemove
  */
-async function ConvertImageToBase64(imageUrl){
-    // Lance une requête Get sur l'Url de l'image
-    return new Promise(async(resolve, reject) => {
-        await fetch(imageUrl)
-            // Retourne le blob de l'image
-            .then((res) => res.blob())
-            .then((blob) => {
-                // instancie une variable constante FileReader pour lire le contenu de l'image
-                const reader = new FileReader();
-                
-                // évenement se déclenchant lorsque la lecture a réussi
-                reader.onload = () => {
-                    console.log(reader.result);
-                    resolve(reader.result.toString());
-                };
-
-                //évenement se déclenchant lorsque la lecture a échoué
-                reader.onerror = (error) => {
-                    console.error(error);
-                    reject(error);
-                };
-                
-                // Lit le contenu du blob de l'image
-                reader.readAsDataURL(blob);
-            });
-    });
+function CreateOrRemoveWorksEditorUi(isRemove){
+    const titleContainerElement = document.querySelector("#portfolio .title-container");
+    let worksEditorLinkElement = document.querySelector("#portfolio a.works-editor-link");
+    if (worksEditorLinkElement)
+    {
+        if (isRemove){
+            titleContainerElement.removeChild(worksEditorLinkElement);
+        }
+        
+        return;
+    }
     
-}
+    // création de l'élément a
+    worksEditorLinkElement = document.createElement("a");
+    worksEditorLinkElement.classList.add("works-editor-link");
 
-/**
- * Retourne le nom du local storage associé à l'id du work pour obtenir l'image au format base64
- * @param {number} id
- * @returns {string}
- */
-function GetWorkBase64ImageLocalStorageName(id){
-    return `${worksLocalStorageName}_Base64_${id}`;
+    // Création de l'élément i;
+    const iconElement = document.createElement("i");
+    iconElement.classList.add("fa-solid", "fa-pen-to-square");
+
+    //Ajoute l'icone dans son parent
+    worksEditorLinkElement.appendChild(iconElement);
+
+    //Création du SPan contenant le texte
+    const textSpanElement = document.createElement("span");
+    textSpanElement.innerText = "modifier";
+
+    //ajoute le texte dans son parent
+    worksEditorLinkElement.appendChild(textSpanElement);
+    
+    //Ajout du lien dans le parent
+    titleContainerElement.appendChild(worksEditorLinkElement);
 }
