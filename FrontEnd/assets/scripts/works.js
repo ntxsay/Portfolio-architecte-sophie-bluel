@@ -256,15 +256,15 @@ async function DeleteWorkByIdAsync(workId){
  * Ajoute le lien pour afficher la modale d'édition des Works
  * @param {boolean} isRemove
  */
-function CreateOrRemoveWorksEditorUi(isRemove){
+function CreateOrRemoveWorksEditorUiLink(isRemove){
     const titleContainerElement = document.querySelector("#portfolio .title-container");
     let worksEditorLinkElement = document.querySelector("#portfolio a.works-editor-link");
-    if (worksEditorLinkElement)
-    {
-        if (isRemove){
-            titleContainerElement.removeChild(worksEditorLinkElement);
-        }
-        
+    
+    // Si worksEditorLinkElement n'existe pas  et que de toute façon allait être supprimé alors on sort de la fonction
+    if (!worksEditorLinkElement && isRemove)
+        return;
+    else if (isRemove) {
+        titleContainerElement.removeChild(worksEditorLinkElement);
         return;
     }
     

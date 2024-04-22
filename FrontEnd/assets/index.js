@@ -91,15 +91,17 @@ loginLinkElement.addEventListener('click', function() {
 });
 
 
-
+/**
+ * Charge une partie de l'UI en fonction de l'état de l'authentification
+ */
 function LoadLoginUi(){
     const tokenValue = window.localStorage.getItem("token");
     if (tokenValue === null || tokenValue === "") {
         loginLinkElement.innerText = "login";
-        CreateOrRemoveWorksEditorUi(true);
+        CreateOrRemoveWorksEditorUiLink(true);
     } else {
         loginLinkElement.innerText = "logout";
-        CreateOrRemoveWorksEditorUi(false);
+        CreateOrRemoveWorksEditorUiLink(false);
     }
 }
 

@@ -322,7 +322,7 @@ footer nav ul {
     top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.3);
 }
 
 .modal.closed {
@@ -396,7 +396,7 @@ footer nav ul {
     border-radius: 60px;
     padding: 12px 40px;
     display: block;
-
+    text-decoration: none;
 }
 
 .modal-buttons-container a span {
@@ -407,9 +407,9 @@ footer nav ul {
 .modal .works-manager-list-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     list-style: none;
-    row-gap: 29px;
+    gap: 29px 11px;
 }
 
 .works-manager-list-container .work-item {

@@ -81,10 +81,27 @@
 		</ul>
 	</nav>
 </footer>
-<aside id="works-Editor-modal" class="modal closed" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+<aside id="works-Editor-modal" class="modal closed" aria-hidden="true" role="dialog" aria-labelledby="work-editor-modal-title">
 	<div class="modal-wrapper">
 		<div class="modal-title-bar">
-			<h1 id="modal-title">Galerie Photo</h1>
+			<h1 id="work-editor-modal-title" class="modal-title">Galerie Photo</h1>
+			<a href="#" class="modal-close-link"><i class="modal-close-icon fa-solid fa-xmark"></i></a>
+		</div>
+		<div class="modal-content-container">
+			<div class="works-manager-list-container">
+				<!--Ajouté via Javascript-->
+			</div>
+			<div class="rule"></div>
+		</div>
+		<div class="modal-buttons-container">
+			<a href="#works-add-modal" class="a-modal"><span>Ajouter une photo</span></a>
+		</div>
+	</div>
+</aside>
+<aside id="works-add-modal" class="modal closed" aria-hidden="true" role="dialog" aria-labelledby="work-editor-modal-title">
+	<div class="modal-wrapper">
+		<div class="modal-title-bar">
+			<h1 id="work-add-modal-title" class="modal-title">Ajout Photo</h1>
 			<a href="#" class="modal-close-link"><i class="modal-close-icon fa-solid fa-xmark"></i></a>
 		</div>
 		<div class="modal-content-container">
