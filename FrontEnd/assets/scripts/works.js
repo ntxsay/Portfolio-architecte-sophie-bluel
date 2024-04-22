@@ -156,7 +156,7 @@ function LoadWorksToGallery(works) {
 function LoadWorksToWorksModal(works) {
 
     // Déclare une constante du div ayant la classe "gallery" depuis son parent.
-    const gallery = document.querySelector("#works-Editor-modal .works-manager-list-container");
+    const gallery = document.querySelector("#works-manager-list-container");
 
     // Efface le contenu de la galerie
     gallery.innerHTML = "";
@@ -170,6 +170,7 @@ function LoadWorksToWorksModal(works) {
         //Création du noeud figure, le parent
         const figureHtmlElement = document.createElement("figure");
         figureHtmlElement.classList.add("work-item");
+        
         // Création du noeud Img premier enfant
         const imageHtmlElement = document.createElement("img");
         imageHtmlElement.alt = work.title;
@@ -220,51 +221,80 @@ async function DeleteWorkByIdAsync(workId){
     const token = window.localStorage.getItem("token");
     if (token === null || token === "")
     {
-        console.error("Impossible de restituer le token de l'utilisateur.");
+        console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
+        window.location.href = "login.html";
         return;
     }
 
+    // Création des options de la requête
     const requestOptions = {
-        method: 'DELETE',
+        method: 'DELETE', // Méthode DELETE
         headers: {
             'Content-Type': 'application/json', // Indique que le corps de la requête est en JSON
-            'Authorization': `Bearer ${token}` // Ajoutez votre token ici
+            'Authorization': `Bearer ${token}` // On ajoute le token
         }
     };
 
-    // Effectuer la requête DELETE
-    await fetch(`http://localhost:5678/api/works/${workId}`, requestOptions)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(response.statusMessage);
-            }
-            // Suppression réussie
-            console.log('La ressource a été supprimée avec succès');
-            WorksSet.delete(workToDelete);
-            console.log(WorksSet.has(workToDelete));
-            const updatedWorks = Array.from(WorksSet);
-            LoadWorksToGallery(updatedWorks);
-            LoadWorksToWorksModal(updatedWorks);
-        })
-        .catch(error => {
-            console.error('Une erreur est survenue lors de la suppression de la ressource :', error);
-        });
+    try {
+        // Récupère la réponse de la requette DELETE décrite dans les options de la réponse ci-dessus
+        const response = await fetch(`http://localhost:5678/api/works/${workId}`, requestOptions);
+        
+        // S'il y a un problème avec la requête alors l
+        if (!response.ok) {
+            ManageBadRequestStatusCodeOnDeleteWork(response.status);
+            console.error('Une erreur est survenue lors de la suppression de la ressource : ', response.statusText);
+            return;
+        }
+    } catch (error) {
+        console.error('Une erreur est survenue lors de la suppression de la ressource :', error);
+        return;
+    }
+
+    // Suppression réussie
+    console.log('La ressource a été supprimée avec succès');
+
+    WorksSet.delete(workToDelete);
+    console.log(WorksSet.has(workToDelete));
+
+    const updatedWorks = Array.from(WorksSet);
+
+    LoadWorksToGallery(updatedWorks);
+    LoadWorksToWorksModal(updatedWorks);
+}
+
+/**
+ * Gère l'action du DOM en cas d'erreur de la requête via le code du status
+ * @param {number} statusCode
+ */
+function ManageBadRequestStatusCodeOnDeleteWork(statusCode){
+    switch (statusCode) {
+        // SI l'utilisateur n'est pas autoriser à accéder à cette ressource alors on force l'utilisateur à se connecter
+        case 401 : {
+            window.localStorage.removeItem("token");
+            window.location.href = "login.html";
+            break;
+        }
+    }
 }
 
 
 /**
- * Ajoute le lien pour afficher la modale d'édition des Works
- * @param {boolean} isRemove
+ * Ajoute ou suprime le lien pour afficher la modale d'édition des Works
+ * @param {boolean} removeAuthorizedContent Indique si le contenu autorisé tel que le lien qui permet de modifier les works doit être supprimés du DOM
  */
-function CreateOrRemoveWorksEditorUiLink(isRemove){
+function CreateOrRemoveWorksEditorUiLink(removeAuthorizedContent){
     const titleContainerElement = document.querySelector("#portfolio .title-container");
     let worksEditorLinkElement = document.querySelector("#portfolio a.works-editor-link");
     
-    // Si worksEditorLinkElement n'existe pas  et que de toute façon allait être supprimé alors on sort de la fonction
-    if (!worksEditorLinkElement && isRemove)
-        return;
-    else if (isRemove) {
+    // Si lien de modification doit être supprimé
+    if (removeAuthorizedContent) {
+        // Si worksEditorLinkElement n'existe pas et que de toute façon allait être supprimé alors on sort de la fonction
+        if (!worksEditorLinkElement)
+            return;
+
+        // supprime le lien de modification des works du DOM
         titleContainerElement.removeChild(worksEditorLinkElement);
+        
         return;
     }
     

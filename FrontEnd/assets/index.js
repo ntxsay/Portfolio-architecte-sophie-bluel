@@ -1,4 +1,13 @@
+/**
+ * Nom de la clé contenant les catégories dans le LocalStorage
+ * @type {string}
+ */
 const categoriesLocalStorageName = "categories";
+
+/**
+ * Nom de la clé contenant les works dans le LocalStorage
+ * @type {string}
+ */
 const worksLocalStorageName = "works";
 
 /**
@@ -13,53 +22,6 @@ const WorksSet = new Set();
 
 const loginLinkElement = document.getElementById("loginLink");
 
-/**
- * Obtient ou définit la modale actuellement ouvert
- */
-let currentOpenedModal;
-
-const openModal = function (eventClick) {
-    eventClick.preventDefault();
-
-    LoadWorksToWorksModal(Array.from(WorksSet));
-    
-    const aElement =  (eventClick.target.nodeName !== "A")
-        ? eventClick.target.parentElement
-        : eventClick.target;
-    
-    const target = document.querySelector(aElement.getAttribute("href"));
-    if (target.classList.contains("closed"))
-        target.classList.remove("closed");
-    
-    target.setAttribute("aria-hidden", "false");
-    target.setAttribute("aria-modal", "true");
-    
-    //Définit la modale actuellement ouverte
-    currentOpenedModal = target;
-    currentOpenedModal.addEventListener('click', closeModal);
-};
-
-const closeModal = function (eventClick) {
-    eventClick.preventDefault();
-
-if (currentOpenedModal === null)
-    return;
-
-//Si la cible du click n'est pas la zone extérieure noir ou le lien pour fermer ou l'icon alors on sort de la function
-if (!eventClick.target.classList.contains("modal") && !eventClick.target.classList.contains("modal-close-link") && 
-    !eventClick.target.classList.contains("modal-close-icon"))
-    return;
-
-    if (!currentOpenedModal.classList.contains("closed"))
-        currentOpenedModal.classList.add("closed");
-
-    currentOpenedModal.setAttribute("aria-hidden", "true");
-    currentOpenedModal.setAttribute("aria-modal", "false");
-    
-    //Efface la modale actuellement ouverte
-    currentOpenedModal = null;
-};
-
 /*
  * Evenement se déclanchant lorsque DOM est entièrement chargé et analysé, 
  * sans attendre le chargement complet des ressources externes telles que les images, 
@@ -71,13 +33,27 @@ document.addEventListener('DOMContentLoaded', async function () {
     await LoadAllCategoriesFromApi();
     await LoadAllWorksFromApi();
 
-    document.querySelectorAll(".a-modal").forEach(element => {
-        element.addEventListener('click', openModal);
-    });
+    AddEventClickOnAllModalLink();
+});
+
+/*
+ * Evènement capturant les touches du clavier que l'utilisateur appuie.
+ *
+ * Plutôt que de capturer les événements de clavier à l'intérieur d'un élément spécifique avec 'document',
+ * j'utilise 'window' pour capturer des événements de clavier de manière globale, qui ne dépend pas d'un d'un élément
+ */
+window.addEventListener('keydown', function (e) {
+
+    //Ferme le modal lorsque l'utilisateur appuie sur la touche Echap de son clavier
+    if (e.key === "Escape" || e.key === "Esc") {
+        closeModal(e);
+    }
+
+
 });
 
 
-loginLinkElement.addEventListener('click', function() {
+loginLinkElement.addEventListener('click', function () {
 
     const tokenValue = window.localStorage.getItem("token");
     if (tokenValue === null || tokenValue === "") {
@@ -94,15 +70,21 @@ loginLinkElement.addEventListener('click', function() {
 /**
  * Charge une partie de l'UI en fonction de l'état de l'authentification
  */
-function LoadLoginUi(){
+function LoadLoginUi() {
     const tokenValue = window.localStorage.getItem("token");
-    if (tokenValue === null || tokenValue === "") {
-        loginLinkElement.innerText = "login";
-        CreateOrRemoveWorksEditorUiLink(true);
-    } else {
-        loginLinkElement.innerText = "logout";
-        CreateOrRemoveWorksEditorUiLink(false);
-    }
+    const isTokenValid = tokenValue !== null && tokenValue !== "";
+    UpdateAuthorizedContentOnDom(isTokenValid);
 }
 
+/**
+ * Supprime ou remanie des éléments du DOM en fonction de l'état de l'authentification de l'utilisateur
+ * @param {boolean} isLogged
+ */
+function UpdateAuthorizedContentOnDom(isLogged) {
+    const removeAuthorizedContent = !isLogged;
+    loginLinkElement.innerText = !isLogged
+        ? "login"
+        : "logout";
 
+    CreateOrRemoveWorksEditorUiLink(removeAuthorizedContent);
+}

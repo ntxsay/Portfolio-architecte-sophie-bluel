@@ -16,6 +16,7 @@
 	<!-- Ajout du fichier javascript à chargement différé -->
 	<script src="./assets/scripts/works.js" defer></script>
 	<script src="./assets/scripts/categories.js" defer></script>
+	<script src="./assets/scripts/modal.js" defer></script>
 	<script src="./assets/index.js" defer></script>
 </head>
 <body>
@@ -84,34 +85,32 @@
 <aside id="works-Editor-modal" class="modal closed" aria-hidden="true" role="dialog" aria-labelledby="work-editor-modal-title">
 	<div class="modal-wrapper">
 		<div class="modal-title-bar">
+			<button title="Revenir aux works" class="modal-back-link can-back"><i class="fa-solid fa-arrow-left"></i></button>
 			<h1 id="work-editor-modal-title" class="modal-title">Galerie Photo</h1>
-			<a href="#" class="modal-close-link"><i class="modal-close-icon fa-solid fa-xmark"></i></a>
+			<button title="Fermer la boite de dialogue" class="modal-close-link"><i class="modal-close-icon fa-solid fa-xmark"></i></button>
 		</div>
 		<div class="modal-content-container">
-			<div class="works-manager-list-container">
+			<div id="works-manager-list-container" class="selected">
 				<!--Ajouté via Javascript-->
+			</div>
+			<div id="works-add-photo-container">
+				<div class="works-input-photo-container">
+					<div class="icon-container"><i class="fa-regular fa-image"></i></div>
+					<label for="addPhotoInput">
+						<span>+ Ajouter photo</span>
+						<input type="file" id="addPhotoInput" name="addPhotoInput" accept=".jpeg, .png">
+					</label>
+					<span class="add-photo-info">jpg, png : 4mo max</span>
+				</div>
+				<div class="works-preview-photo-container">
+					<img id="add-photo-preview-img" alt="Prévisualisation de l'image"/>
+				</div>
 			</div>
 			<div class="rule"></div>
 		</div>
 		<div class="modal-buttons-container">
-			<a href="#works-add-modal" class="a-modal"><span>Ajouter une photo</span></a>
-		</div>
-	</div>
-</aside>
-<aside id="works-add-modal" class="modal closed" aria-hidden="true" role="dialog" aria-labelledby="work-editor-modal-title">
-	<div class="modal-wrapper">
-		<div class="modal-title-bar">
-			<h1 id="work-add-modal-title" class="modal-title">Ajout Photo</h1>
-			<a href="#" class="modal-close-link"><i class="modal-close-icon fa-solid fa-xmark"></i></a>
-		</div>
-		<div class="modal-content-container">
-			<div class="works-manager-list-container">
-				<!--Ajouté via Javascript-->
-			</div>
-			<div class="rule"></div>
-		</div>
-		<div class="modal-buttons-container">
-			<a><span>Ajouter une photo</span></a>
+			<button id="add-photo-btn" class="a-modal-button selected"><span>Ajouter une photo</span></button>
+			<button id="validate-photo-btn" class="a-modal-button"><span>Valider</span></button>
 		</div>
 	</div>
 </aside>
