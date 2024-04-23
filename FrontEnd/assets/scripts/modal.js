@@ -8,6 +8,8 @@ const fileTypes = [
 
 const addPhotoModalBtn = document.getElementById("add-photo-btn");
 const validatePhotoModalBtn = document.getElementById("validate-photo-btn");
+const modalBackBtn = document.querySelector("#works-Editor-modal .modal-back-button");
+const modalCloseBtn = document.querySelector("#works-Editor-modal .modal-close-button");
 
 /**
  * Obtient ou définit l'élément HTML qui représente la modale actuellement ouverte
@@ -23,6 +25,10 @@ const isTargetModalLinkOpener = function (target) {
     return target.nodeName === "A" && target.classList.contains("a-modal");
 }
 
+/**
+ * Fonction permettant d'ouvrir la modale
+ * @param {MouseEvent} eventClick
+ */
 const openModal = function (eventClick) {
     eventClick.preventDefault();
 
@@ -65,81 +71,171 @@ const openModal = function (eventClick) {
     CurrentOpenedModal.addEventListener('click', closeModal);
 };
 
+/**
+ * Fonction permettant de fermer la modale si elle est ouverte
+ * @param eventClick
+ */
 const closeModal = function (eventClick) {
     eventClick.preventDefault();
 
-    if (CurrentOpenedModal === null)
+    //Si la cible du click n'est pas la zone extérieure noir ou le lien pour fermer ou l'icon alors on sort de la function
+    if (!eventClick.target.classList.contains("modal"))
         return;
 
-//Si la cible du click n'est pas la zone extérieure noir ou le lien pour fermer ou l'icon alors on sort de la function
-    if (!eventClick.target.classList.contains("modal") && !eventClick.target.classList.contains("modal-close-link") &&
-        !eventClick.target.classList.contains("modal-close-icon"))
+    CloseCurrentModal();
+};
+
+/*
+ * Evenement se produisant lorsque l'utilisateur clique sur le bouton de retour pour revenir en arrière
+ */
+modalBackBtn.addEventListener('click', function (eventClick) {
+    eventClick.stopPropagation();
+
+    //Si je suis en train d'ajouter un work alors que j'appuie sur le bouton retour
+    if (document.getElementById("works-add-photo-container").classList.contains("selected")) {
+
+        //Affiche la liste des works
+        DisplayWorkListContainerOnModal();
+
+        //Masque le bouton de retour
+        if (modalBackBtn.classList.contains("can-back-true"))
+            modalBackBtn.classList.remove("can-back-true");
+    }
+});
+
+/**
+ * Evenement se produisant lorsque l'utilisateur clique sur le bouton fermer pour fermer la modale
+ */
+modalCloseBtn.addEventListener('click', function (eventClick) {
+    eventClick.stopPropagation();
+    CloseCurrentModal();
+})
+
+/*
+ * Evenement se produisant lorsque l'utilisateur clique sur le bouton pour ajouter
+ * un nouveau work
+ */
+addPhotoModalBtn.addEventListener('click', async function (eventClick) {
+    eventClick.stopPropagation();
+
+    //Affiche le bouton d retour sur la modale
+    if (!modalBackBtn.classList.contains("can-back-true"))
+        modalBackBtn.classList.add("can-back-true");
+
+    //Affiche le formulaire de création de work
+    DisplayAddWorkContainerOnModal();
+
+    //Réinitialise et ajoute le formulaire de création de work
+    await CreateAddPhotoHeaderUi();
+});
+
+/*
+ * Evenement se produisant lorsque l'utilisateur clique sur le bouton
+ * de validation de work
+ */
+validatePhotoModalBtn.addEventListener('click', function (eventClick) {
+    eventClick.stopPropagation();
+
+    const form = document.querySelector("#works-add-photo-container form");
+    // Déclencher l'événement submit du formulaire
+    let event = new Event("submit", {
+        bubbles: true,
+        cancelable: true
+    });
+    form.dispatchEvent(event);
+});
+
+/**
+ * Se produit lorsque le formulaire est soumis
+ * @param {SubmitEvent} event
+ */
+const onWorkPhotoSubmitted = async function (event) {
+    event.preventDefault();
+
+    if (!IsWorkFormValid())
         return;
 
-    if (!CurrentOpenedModal.classList.contains("closed"))
-        CurrentOpenedModal.classList.add("closed");
-
-    CurrentOpenedModal.setAttribute("aria-hidden", "true");
-    CurrentOpenedModal.setAttribute("aria-modal", "false");
-
-    CurrentOpenedModal.removeEventListener('click', closeModal);
+    const selectedFile = document.querySelector("#addPhotoInput").files[0];
+    const titleInputValue = document.querySelector("#workProjectName").value;
+    const selectCategory = document.querySelector("#workCategoryName");
+    const selectedCategory = selectCategory.options[selectCategory.selectedIndex].value;
+    const selectedFileBase64 = (await ConvertFileToBase64(selectedFile)).toString();
+    
+    await InsertWorkAsync(selectedFileBase64, titleInputValue, selectedCategory, selectedFile, selectedFile.name);
 };
 
 /**
- * Retourne une valeur booléenne indiquant si le type du fichier en paramètre comprend un des types dans la constante fileTypes
- * @param file
- * @returns {boolean}
+ * Fonction exécuté lorsque l'utilisateur a sélectionné un fichier dans le sélecteur de fichier
+ * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+ * @param {Event} changeEvent
+ * @param {HTMLInputElement} fileInput
  */
-function isSelectedFileTypeValid(file) {
-    return fileTypes.includes(file.type);
-}
+const onWorkAddedPhoto = function (changeEvent, fileInput) {
+    const spanError = document.querySelector("#works-add-photo-container span.error-msg");
+    const previewImg = document.getElementById("add-photo-preview-img");
 
-/**
- * Retourne une valeur booléenne indiquant si la taille du fichier est supérieur à 4 mo
- * @param {number} number
- * @returns {boolean}
- */
-function isGreaterThan4mo(number) {
-    // 1048576 représente 1mb
-    if (number < oneMbSize)
-        return false;
-    
-    const moSize = getStringFileSize(number)[0];
-    return  moSize > 4;
-}
+    const previewImageContainer = previewImg.parentElement;
+    const selectedFiles = fileInput.files;
 
+    previewImg.src = "";
+    previewImg.alt = "Prévisualisation de l'image"
 
-/**
- * Retourne une chaine de caractère représentant la taille du fichier
- * @param number
- * @returns {(number|string)[]}
- */
-function getStringFileSize(number) {
-    const value = getFileSize(number);
-    if (number < oneKbSize) {
-        return [value, `${number} octets`];
-    } else if (number >= oneKbSize && number < oneMbSize) {
-        return [value, `${value} Ko`];
-    } else {
-        return [value, `${value} Mo` ];
+    if (selectedFiles.length !== 1) {
+        //Masque le conteneur de l'image de prévisualisation
+        if (!previewImageContainer.classList.contains("hidden"))
+            previewImageContainer.classList.add("hidden");
+
+        //Ecrit et affiche un message d'erreur
+        spanError.innerText = selectedFiles.length === 0 ? "Aucun fichier n'a été sélectionné." : "Un seul fichier doit être sélectionné.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+
+        //Réinitialise le sélecteur de fichier
+        fileInput.value = "";
+        return;
     }
-}
 
-/**
- * Calcule la taille de l'image
- * @param {number} number
- * @returns {number}
- */
-function getFileSize(number) {
-    if (number < oneKbSize) {
-        return number;
-    } else if (number >= oneKbSize && number < oneMbSize) {
-        return parseInt((number / oneKbSize).toFixed(1));
-    } else {
-        return parseInt((number / oneMbSize).toFixed(1));
+    //Récupère le premier fichier
+    const currentFileSelected = selectedFiles[0];
+    if (IsGreaterThan4mo(currentFileSelected.size)) {
+        //Ecrit et affiche un message d'erreur
+        spanError.innerText = "La taille de l'image doit être inférieur ou égale à 4 Mo.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+
+        //Réinitialise le sélecteur de fichier
+        fileInput.value = "";
+        return;
     }
-}
 
+    if (!isSelectedFileTypeValid(currentFileSelected)) {
+        //Ecrit et affiche un message d'erreur
+        spanError.innerText = "Le format du fichier n'est pas correct.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+
+        //Réinitialise le sélecteur de fichier
+        fileInput.value = "";
+        return;
+    }
+
+    //Masque le sélecteur de fichier
+    const addPhotoContainer = document.querySelector("#works-add-photo-container .works-input-photo-container");
+    if (!addPhotoContainer.classList.contains("hidden"))
+        addPhotoContainer.classList.add("hidden");
+
+    //Ajoute les données du fichier à l'image
+    previewImg.src = URL.createObjectURL(currentFileSelected);
+    previewImg.alt = previewImg.title = currentFileSelected.name;
+
+    //Affiche l'image si elle ne l'était pas
+    if (previewImageContainer.classList.contains("hidden"))
+        previewImageContainer.classList.remove("hidden");
+
+    //Masque l'erreu
+    spanError.innerText = "";
+    spanError.style.display = "none";
+};
 
 /**
  * Fonction permettant d'attacher un évènement click aux éléments HTML A pour ouvrir la modale associée
@@ -150,74 +246,146 @@ function AddEventClickOnAllModalLink() {
     });
 }
 
-/*
- * Evenement se produisant lorsque l'utilisateur clique sur le bouton pour ajouter
- * un nouveau work
+/**
+ * Ferme la modale actuelle
  */
-addPhotoModalBtn.addEventListener('click', function (eventClick) {
-    eventClick.stopPropagation();
+function CloseCurrentModal() {
+    if (CurrentOpenedModal === null)
+        return;
 
-    document.getElementById("works-manager-list-container").classList.remove("selected");
+    //Ajoute la classe qui permet de fermer la modale
+    if (!CurrentOpenedModal.classList.contains("closed"))
+        CurrentOpenedModal.classList.add("closed");
 
-    const addPhotoContainer = document.getElementById("works-add-photo-container");
-    if (!addPhotoContainer.classList.contains("selected"))
-        addPhotoContainer.classList.add("selected");
+    CurrentOpenedModal.setAttribute("aria-hidden", "true");
+    CurrentOpenedModal.setAttribute("aria-modal", "false");
 
-    addPhotoModalBtn.classList.remove("selected");
+    //Efface l'évenement click du gestionnaire d'évenement
+    CurrentOpenedModal.removeEventListener('click', closeModal);
 
-    if (!validatePhotoModalBtn.classList.contains("selected"))
-        validatePhotoModalBtn.classList.add("selected");
-
-    //Ajoute le formulaire de création de work
-    CreateAddPhotoHeaderUi();
-});
-
-validatePhotoModalBtn.addEventListener('click', function (eventClick) {
-    eventClick.stopPropagation();
-});
+    //Efface le formulaire et affiche la liste
+    RemoveNewWorkForm();
+}
 
 /**
- * Fonction exécuté lorsque l'utilisateur a sélectionné un fichier dans le sélecteur de fichier
- * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
- * @param {Event} changeEvent
- * @param {HTMLInputElement} fileInput
+ * Retourne une valeur booléenne indiquant si si le formulaire est valide
+ * @returns {boolean}
  */
-const onWorkAddedPhoto = function (changeEvent, fileInput) {
-    const previewImg = document.getElementById("add-photo-preview-img");
+function IsWorkFormValid() {
+    const spanError = document.querySelector("#works-add-photo-container span.error-msg");
+
+    const fileInput = document.querySelector("#addPhotoInput");
     const selectedFiles = fileInput.files;
     if (selectedFiles.length !== 1) {
-        previewImg.src = "";
-        previewImg.alt = "Prévisualisation de l'image"
-        console.warn(selectedFiles.length === 0 ? "Aucun fichier n'a été sélectionné." : "Un seul fichier doit être sélectionné.");
-        if (!previewImg.classList.contains("hidden"))
-            previewImg.classList.add("hidden");
-        alert("Vous devez sélectionner un seul fichier.");
-        return;
+        spanError.innerText = selectedFiles.length === 0 ? "Aucun fichier n'a été sélectionné." : "Un seul fichier doit être sélectionné.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+        return false;
     }
 
     //Récupère le premier fichier
     const currentFileSelected = selectedFiles[0];
-    if (isGreaterThan4mo(currentFileSelected.size)){
-        alert("La taille de l'image doit être inférieur ou égale à 4 Mo.");
-        return;
+    if (IsGreaterThan4mo(currentFileSelected.size)) {
+        spanError.innerText = "La taille de l'image doit être inférieur ou égale à 4 Mo.";
+        spanError.style.display = "block";
+        return false;
     }
-    
-    //Masque le sélecteur de fichier
-    const addPhotoContainer = document.querySelector("#works-add-photo-container .works-input-photo-container");
-    if (!addPhotoContainer.classList.contains("hidden"))
-        addPhotoContainer.classList.add("hidden");
 
-    //Ajoute les données du fichier à l'image
-    previewImg.src = URL.createObjectURL(currentFileSelected);
-    previewImg.alt = previewImg.title = currentFileSelected.name;
-    
-    //Affiche l'image sielle ne l'était pas
-    const previewImageContainer = previewImg.parentElement;
-    if (previewImageContainer.classList.contains("hidden"))
-        previewImageContainer.classList.remove("hidden");
-};
+    if (!isSelectedFileTypeValid(currentFileSelected)) {
+        spanError.innerText = "Le format du fichier n'est pas correct.";
+        spanError.style.display = "block";
+        return false;
+    }
 
-function CreateAndGetNewWorkForm() {
+    const titleInputValue = document.querySelector("#workProjectName").value;
+    // Expression régulière pour vérifier si le texte est depuis le début de la ligne contient 0 fois ou plus des espaces blancs jusqu'à la fin de la ligne
+    const regex = /^\s*$/;
+
+    // Test du texte avec l'expression régulière
+    if (titleInputValue === null || regex.test(titleInputValue)) {
+        spanError.innerText = "Le titre du work ne peut pas être null, vide ou ne contenir que des espaces blancs.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+        if (!validatePhotoModalBtn.classList.contains("disabled"))
+            validatePhotoModalBtn.classList.add("disabled");
+        return false;
+    }
+
+    const selectCategory = document.querySelector("#workCategoryName");
+    if (selectCategory.selectedIndex === -1) {
+        spanError.innerText = "Vous devez sélectionner une catégorie.";
+        spanError.style.display = "block";
+        console.error(spanError.innerText);
+        if (!validatePhotoModalBtn.classList.contains("disabled"))
+            validatePhotoModalBtn.classList.add("disabled");
+        return false;
+    }
+
+    if (validatePhotoModalBtn.classList.contains("disabled"))
+        validatePhotoModalBtn.classList.remove("disabled");
+
+    spanError.innerText = "";
+    spanError.style.display = "none";
+
+    return true;
+}
+
+/**
+ * Affiche le conteneur de la liste des works et masque le conteneur de création de work
+ */
+function DisplayWorkListContainerOnModal() {
+    //Masque le conteneur du formulaire de création de work
+    const addPhotoContainer = document.getElementById("works-add-photo-container");
+    if (addPhotoContainer.classList.contains("selected"))
+        addPhotoContainer.classList.remove("selected");
+
+    //Affiche le conteneur de la liste des works
+    const workListContainer = document.getElementById("works-manager-list-container");
+    if (!workListContainer.classList.contains("selected"))
+        workListContainer.classList.add("selected");
+
+    //Masque le bouton pour valider et créer le work
+    if (validatePhotoModalBtn.classList.contains("selected"))
+        validatePhotoModalBtn.classList.remove("selected");
+
+    //Affiche le bouton pour créer un work
+    if (!addPhotoModalBtn.classList.contains("selected"))
+        addPhotoModalBtn.classList.add("selected");
+}
+
+/**
+ * Affiche le conteneur de création de work et masque le conteneur de la liste des works
+ */
+function DisplayAddWorkContainerOnModal() {
+
+    // Masque le conteneur de la liste des works
+    const workListContainer = document.getElementById("works-manager-list-container");
+    if (workListContainer.classList.contains("selected"))
+        workListContainer.classList.remove("selected");
+
+    //Affiche le conteneur contenant le formulaire de création de work
+    const addPhotoContainer = document.getElementById("works-add-photo-container");
+    if (!addPhotoContainer.classList.contains("selected"))
+        addPhotoContainer.classList.add("selected");
+
+    //Masque le bouton pour ajouter des works
+    if (addPhotoModalBtn.classList.contains("selected"))
+        addPhotoModalBtn.classList.remove("selected");
+
+    //Affiche le bouton de validation du work
+    if (!validatePhotoModalBtn.classList.contains("selected"))
+        validatePhotoModalBtn.classList.add("selected");
+    
+    //Désactive (style) le bouton par défaut
+    if (!validatePhotoModalBtn.classList.contains("disabled"))
+        validatePhotoModalBtn.classList.add("disabled");
+}
+
+/**
+ * Efface le contenu du conteneur qui permet d'ajouter un work et le rempli avec l'élément form puis e retourne
+ * @returns {HTMLFormElement|null}
+ */
+async function CreateAndGetNewWorkForm() {
     const addPhotoContainer = document.getElementById("works-add-photo-container");
     if (!addPhotoContainer) {
         console.error("L'élément parent n'existe pas.");
@@ -231,20 +399,39 @@ function CreateAndGetNewWorkForm() {
 
     //Création du formulaire de création de work
     const form = document.createElement("form");
+    form.onsubmit = await onWorkPhotoSubmitted;
     addPhotoContainer.appendChild(form);
 
     return form;
 }
 
 /**
+ * Efface le contenu du conteneur qui permet d'ajouter un work et affiche par défaut la liste des works
+ */
+function RemoveNewWorkForm() {
+    const addPhotoContainer = document.getElementById("works-add-photo-container");
+    if (!addPhotoContainer) {
+        console.error("L'élément parent n'existe pas.");
+        return;
+    }
+
+    while (addPhotoContainer.hasChildNodes()) {
+        const child = addPhotoContainer.childNodes[0];
+        addPhotoContainer.removeChild(child);
+    }
+
+    DisplayWorkListContainerOnModal();
+}
+
+/**
  * Crée l'Ui d'ajout de nouveau work qui comprends uniquement le formulaire et l'en-tête (sélecteur de fichier et image de prévisualisation)
  */
-function CreateAddPhotoHeaderUi() {
+async function CreateAddPhotoHeaderUi() {
     //Création du formulaire de création de work
-    const form = CreateAndGetNewWorkForm();
+    const form = await CreateAndGetNewWorkForm();
 
-    //Création de l'en-tête du formulaire qui contient l'icone d'une image, le sélecteur de fichiers, les remarque de mise en ligne
-    // et la prévisualisation de l'image
+    /*Création de l'en-tête du formulaire qui contient l'icone d'une image, le sélecteur de fichiers, les remarque de mise en ligne
+    et la prévisualisation de l'image*/
     const headerContainer = document.createElement("div");
     headerContainer.classList.add("works-add-photo-header-container");
     form.appendChild(headerContainer);
@@ -283,6 +470,7 @@ function CreateAddPhotoHeaderUi() {
     fileInput.id = "addPhotoInput";
     fileInput.name = "addPhotoInput";
     fileInput.accept = ".jpeg, .png";
+    fileInput.required = true;
     fileInput.onchange = (e) => {
         onWorkAddedPhoto(e, fileInput);
     };
@@ -334,6 +522,10 @@ function CreateNewWorkInfos(form) {
     inputTextTitle.type = "text";
     inputTextTitle.id = "workProjectName";
     inputTextTitle.name = "workProjectName";
+    inputTextTitle.required = true;
+    inputTextTitle.onchange = () => {
+        IsWorkFormValid();
+    }
     projectInfosContainer.appendChild(inputTextTitle);
 
     //Création du label des catégories
@@ -346,6 +538,7 @@ function CreateNewWorkInfos(form) {
     const selectCategory = document.createElement("select");
     selectCategory.id = "workCategoryName";
     selectCategory.name = "workCategoryName";
+    selectCategory.required = true;
     projectInfosContainer.appendChild(selectCategory);
 
     CategoriesSet.forEach((category) => {
@@ -354,4 +547,101 @@ function CreateNewWorkInfos(form) {
         categoryOption.text = category.name;
         selectCategory.add(categoryOption, null);
     });
+
+    //Création du span contenant les erreurs
+    const spanError = document.createElement("span");
+    spanError.classList.add("error-msg");
+    spanError.style.display = "none";
+    projectInfosContainer.appendChild(spanError);
+}
+
+/**
+ * Retourne une valeur booléenne indiquant si le type du fichier en paramètre comprend un des types dans la constante fileTypes
+ * @param file
+ * @returns {boolean}
+ */
+function isSelectedFileTypeValid(file) {
+    return fileTypes.includes(file.type);
+}
+
+/**
+ * Retourne une valeur booléenne indiquant si la taille du fichier est supérieur à 4 mo
+ * @param {number} number
+ * @returns {boolean}
+ */
+function IsGreaterThan4mo(number) {
+    // si le fichier fait moins de 1mb
+    if (number < oneMbSize)
+        return false;
+
+    //Récupère uniquement la taille du fichier
+    const moSize = getStringFileSize(number)[0];
+    return moSize > 4;
+}
+
+
+/**
+ * Retourne une chaine de caractère représentant la taille du fichier
+ * @param number
+ * @returns {(number|string)[]}
+ */
+function getStringFileSize(number) {
+    const value = getFileSize(number);
+    if (number < oneKbSize) {
+        return [value, `${number} octets`];
+    } else if (number >= oneKbSize && number < oneMbSize) {
+        return [value, `${value} Ko`];
+    } else {
+        return [value, `${value} Mo`];
+    }
+}
+
+/**
+ * Calcule la taille de l'image
+ * @param {number} number
+ * @returns {number}
+ */
+function getFileSize(number) {
+    if (number < oneKbSize) {
+        return number;
+    } else if (number >= oneKbSize && number < oneMbSize) {
+        return parseInt((number / oneKbSize).toFixed(1));
+    } else {
+        return parseInt((number / oneMbSize).toFixed(1));
+    }
+}
+
+
+/**
+ * 
+ * @param {file} file
+ * @returns {Promise<unknown>}
+ * @constructor
+ */
+function ConvertFileToBase64(file){
+    try {
+        //Crée une promesse et retourne si succès le string base64
+        return new Promise((resolve, reject) => {
+            // instancie une variable constante FileReader pour lire le contenu de l'image
+            const reader = new FileReader();
+
+            // évenement se déclenchant lorsque la lecture a réussi
+            reader.onload = () => {
+                console.log(reader.result);
+                resolve(reader.result.toString());
+            };
+
+            //évenement se déclenchant lorsque la lecture a échoué
+            reader.onerror = (error) => {
+                console.error(error);
+                reject(error);
+            };
+
+            // Lit le contenu du blob de l'image
+            reader.readAsDataURL(file);
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
 }

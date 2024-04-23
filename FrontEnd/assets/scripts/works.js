@@ -199,6 +199,66 @@ function LoadWorksToWorksModal(works) {
 }
 
 /**
+ * Insère un nouveau work dans la base de données
+ * @param {string} title
+ * @param {number} categoryId
+ * @param file
+ * @param filename
+ * @returns {Promise<void>}
+ */
+async function InsertWorkAsync(title, categoryId, file, filename) {
+    const token = window.localStorage.getItem("token");
+    if (token === null || token === "")
+    {
+        console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
+        window.location.href = "login.html";
+        return;
+    }
+
+    // Créer un objet FormData
+    const formData = new FormData();
+
+    // Ajouter les champs du formulaire
+    formData.append('title', title);
+    formData.append('category', categoryId);
+    formData.append('image', file, filename);
+
+// Générer une limite pour multipart/form-data
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+
+// Créer l'en-tête Content-Type avec la limite
+    const contentTypeHeader = 'multipart/form-data; boundary=' + boundary;
+    
+    // Configuration de la requête
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            // Indique que le corps de la requête est en JSON
+            'Content-Type': contentTypeHeader,
+            // On ajoute le token
+            'Authorization': `Bearer ${token}`
+        },
+
+        // Convertit l'objet newWorkData en Json (au format texte)
+        body: formData
+    };
+
+    try {
+        const submitResponse = await fetch("http://localhost:5678/api/works", requestOptions);
+        if (!submitResponse.ok){
+            console.error(submitResponse.statusText);
+            return;
+        }
+        
+        console.log(submitResponse);
+        
+    } catch (error) {
+        console.error(error);
+        return;
+    }
+}
+
+/**
  * Supprime un work par son Identifiant
  * @param {number} workId
  */
@@ -228,10 +288,12 @@ async function DeleteWorkByIdAsync(workId){
 
     // Création des options de la requête
     const requestOptions = {
-        method: 'DELETE', // Méthode DELETE
+        method: 'DELETE',
         headers: {
-            'Content-Type': 'application/json', // Indique que le corps de la requête est en JSON
-            'Authorization': `Bearer ${token}` // On ajoute le token
+            // Indique que le corps de la requête est en JSON
+            'Content-Type': 'application/json',
+            // On ajoute le token
+            'Authorization': `Bearer ${token}` 
         }
     };
 
