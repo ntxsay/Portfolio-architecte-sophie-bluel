@@ -255,7 +255,8 @@ a#works-editor-link {
 }
 
 #contact form,
-#log_in form {
+#log_in form
+{
     text-align: left;
     margin-top: 30px;
     display: flex;
@@ -263,9 +264,24 @@ a#works-editor-link {
 }
 
 #contact input,
-#log_in input {
+#log_in input,
+#works-add-photo-container .works-project-infos input,
+#works-add-photo-container .works-project-infos select
+{
     height: 50px;
     font-size: 1.2em;
+    border: none;
+    box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
+}
+
+#contact label,
+#log_in label,
+#works-add-photo-container .works-project-infos label
+{
+    margin: 2em 0 1em 0;
+}
+
+#contact textarea {
     border: none;
     box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
@@ -277,16 +293,6 @@ a#works-editor-link {
     color: orangered;
     font-weight: 700;
     text-align: center;
-}
-
-#contact label,
-#log_in label {
-    margin: 2em 0 1em 0;
-}
-
-#contact textarea {
-    border: none;
-    box-shadow: 0px 4px 14px rgba(0, 0, 0, 0.09);
 }
 
 #log_in a {
@@ -472,12 +478,6 @@ button.modal-back-link.can-back {
 
 /**** Ajout photo ****/
 
-#works-add-photo-container {
-    background: #E8F1F6;
-    border-radius: 3px;
-    padding: 13px 0;
-}
-
 #works-add-photo-container.selected {
     display: block;
 }
@@ -487,6 +487,14 @@ button.modal-back-link.can-back {
     grid-template-rows: 76px auto auto auto;
     row-gap: 7px;
     justify-content: center;
+    background: #E8F1F6;
+    border-radius: 3px;
+    padding: 13px 0;
+    height: calc(169px - 26px);
+}
+
+#works-add-photo-container .works-input-photo-container.hidden {
+    display: none;
 }
 
 #works-add-photo-container .icon-container {
@@ -504,7 +512,7 @@ button.modal-back-link.can-back {
     display: none;
 }
 
-#works-add-photo-container label span {
+.works-input-photo-container label span {
     padding: 10px 33px;
     background: #CBD6DC;
     color: #306685;
@@ -514,7 +522,7 @@ button.modal-back-link.can-back {
     font-family: "Work Sans", sans-serif;
 }
 
-#works-add-photo-container .add-photo-info {
+.works-input-photo-container .add-photo-info {
     margin-top: 13px;
     font-family: "Work Sans", sans-serif;
     font-size: 12px;
@@ -522,6 +530,29 @@ button.modal-back-link.can-back {
     text-align: center;
 }
 
+#works-add-photo-container .works-project-infos {
+    text-align: left;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+#works-add-photo-container .works-preview-photo-container {
+    display: flex;
+    justify-content: center;
+    background: #E8F1F6;
+    border-radius: 3px;
+    height: 169px;
+}
+
+#works-add-photo-container .works-preview-photo-container.hidden {
+    display: none;
+}
+
 #add-photo-preview-img {
     height: 100%;
 }
+
+
+
+

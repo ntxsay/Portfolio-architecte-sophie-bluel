@@ -94,17 +94,29 @@
 				<!--Ajouté via Javascript-->
 			</div>
 			<div id="works-add-photo-container">
-				<div class="works-input-photo-container">
-					<div class="icon-container"><i class="fa-regular fa-image"></i></div>
-					<label for="addPhotoInput">
-						<span>+ Ajouter photo</span>
-						<input type="file" id="addPhotoInput" name="addPhotoInput" accept=".jpeg, .png">
-					</label>
-					<span class="add-photo-info">jpg, png : 4mo max</span>
-				</div>
-				<div class="works-preview-photo-container">
-					<img id="add-photo-preview-img" alt="Prévisualisation de l'image"/>
-				</div>
+				<form>
+					<div class="works-add-photo-header-container">
+						<div class="works-input-photo-container">
+							<div class="icon-container"><i class="fa-regular fa-image"></i></div>
+							<label for="addPhotoInput">
+								<span>+ Ajouter photo</span>
+								<input type="file" id="addPhotoInput" name="addPhotoInput" accept=".jpeg, .png">
+							</label>
+							<span class="add-photo-info">jpg, png : 4mo max</span>
+						</div>
+						<div class="works-preview-photo-container hidden">
+							<img id="add-photo-preview-img" alt="Prévisualisation de l'image"/>
+						</div>
+					</div>
+					<div class="works-project-infos">
+						<label for="workProjectName">Titre</label>
+						<input type="text" id="workProjectName" name="workProjectName" />
+						<label for="workCategoryName">Catégorie</label>
+						<select id="workCategoryName" name="workCategoryName">
+							<option></option>
+						</select>
+					</div>
+				</form>
 			</div>
 			<div class="rule"></div>
 		</div>
