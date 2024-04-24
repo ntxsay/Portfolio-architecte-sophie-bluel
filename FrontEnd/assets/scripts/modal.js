@@ -60,7 +60,7 @@ const openModal = function (eventClick) {
 
     CurrentOpenedModal = document.querySelector(aElement.getAttribute("href"));
 
-    LoadWorksToWorksModal(Array.from(WorksSet));
+    AddWorksToModal(Array.from(WorksSet));
 
     if (CurrentOpenedModal.classList.contains("closed"))
         CurrentOpenedModal.classList.remove("closed");
@@ -137,6 +137,7 @@ validatePhotoModalBtn.addEventListener('click', function (eventClick) {
     eventClick.stopPropagation();
 
     const form = document.querySelector("#works-add-photo-container form");
+    //Etant donné que form.submit()  ne lance pas l'évenement  onsubmit alors on le force d'une autre façon
     // Déclencher l'événement submit du formulaire
     let event = new Event("submit", {
         bubbles: true,
@@ -159,9 +160,23 @@ const onWorkPhotoSubmitted = async function (event) {
     const titleInputValue = document.querySelector("#workProjectName").value;
     const selectCategory = document.querySelector("#workCategoryName");
     const selectedCategory = selectCategory.options[selectCategory.selectedIndex].value;
-    const selectedFileBase64 = (await ConvertFileToBase64(selectedFile)).toString();
+    const fileBlob = await ConvertFileToBlobAsync(selectedFile);
+
+    const spanError = document.querySelector("#works-add-photo-container span.error-msg");
+    const result = await InsertWorkInDataBaseAsync(titleInputValue, selectedCategory, fileBlob, selectedFile.name);
     
-    await InsertWorkAsync(selectedFileBase64, titleInputValue, selectedCategory, selectedFile, selectedFile.name);
+    //Si l'insertion est un échec alors on affiche l'erreur sans fermer la modale
+    if (!result.isSucces){
+        spanError.innerText = result.message;
+        spanError.style.display = "block";
+        return;
+    }
+
+    spanError.innerText = "";
+    spanError.style.display = "none";
+    
+    //Ferme la modale
+    CloseCurrentModal();
 };
 
 /**
@@ -170,7 +185,7 @@ const onWorkPhotoSubmitted = async function (event) {
  * @param {Event} changeEvent
  * @param {HTMLInputElement} fileInput
  */
-const onWorkAddedPhoto = function (changeEvent, fileInput) {
+const onWorkAddedPhoto = async function (changeEvent, fileInput) {
     const spanError = document.querySelector("#works-add-photo-container span.error-msg");
     const previewImg = document.getElementById("add-photo-preview-img");
 
@@ -224,15 +239,18 @@ const onWorkAddedPhoto = function (changeEvent, fileInput) {
     if (!addPhotoContainer.classList.contains("hidden"))
         addPhotoContainer.classList.add("hidden");
 
+    //Obtient le blob du fichier explicitement
+    const fileBlob = await ConvertFileToBlobAsync(currentFileSelected);
+    
     //Ajoute les données du fichier à l'image
-    previewImg.src = URL.createObjectURL(currentFileSelected);
+    previewImg.src = URL.createObjectURL(fileBlob);
     previewImg.alt = previewImg.title = currentFileSelected.name;
 
     //Affiche l'image si elle ne l'était pas
     if (previewImageContainer.classList.contains("hidden"))
         previewImageContainer.classList.remove("hidden");
 
-    //Masque l'erreu
+    //Masque l'erreur
     spanError.innerText = "";
     spanError.style.display = "none";
 };
@@ -471,8 +489,8 @@ async function CreateAddPhotoHeaderUi() {
     fileInput.name = "addPhotoInput";
     fileInput.accept = ".jpeg, .png";
     fileInput.required = true;
-    fileInput.onchange = (e) => {
-        onWorkAddedPhoto(e, fileInput);
+    fileInput.onchange = async (e) => {
+        await onWorkAddedPhoto(e, fileInput);
     };
     label.appendChild(fileInput);
 
@@ -555,6 +573,8 @@ function CreateNewWorkInfos(form) {
     projectInfosContainer.appendChild(spanError);
 }
 
+/***************************************** HELPERS *****************************************/
+
 /**
  * Retourne une valeur booléenne indiquant si le type du fichier en paramètre comprend un des types dans la constante fileTypes
  * @param file
@@ -566,82 +586,75 @@ function isSelectedFileTypeValid(file) {
 
 /**
  * Retourne une valeur booléenne indiquant si la taille du fichier est supérieur à 4 mo
- * @param {number} number
+ * @param {number} fileSize
  * @returns {boolean}
  */
-function IsGreaterThan4mo(number) {
+function IsGreaterThan4mo(fileSize) {
     // si le fichier fait moins de 1mb
-    if (number < oneMbSize)
+    if (fileSize < oneMbSize)
         return false;
 
     //Récupère uniquement la taille du fichier
-    const moSize = getStringFileSize(number)[0];
-    return moSize > 4;
+    const fileSizeResult = GetFileSize(fileSize);
+    return fileSizeResult.size > 4;
 }
 
 
 /**
  * Retourne une chaine de caractère représentant la taille du fichier
- * @param number
- * @returns {(number|string)[]}
+ * @param {number} fileSize
+ * @returns {{size: number, label: string, suffix: string}}
  */
-function getStringFileSize(number) {
-    const value = getFileSize(number);
-    if (number < oneKbSize) {
-        return [value, `${number} octets`];
-    } else if (number >= oneKbSize && number < oneMbSize) {
-        return [value, `${value} Ko`];
+function GetFileSize(fileSize) {
+    if (fileSize < oneKbSize) {
+        return {
+            size: fileSize,
+            suffix: 'B',
+            label: `${fileSize} octets`
+        };
+    } else if (fileSize >= oneKbSize && fileSize < oneMbSize) {
+        const value = (fileSize / oneKbSize).toFixed(1);
+        return {
+            size: parseInt(value),
+            suffix: 'KB',
+            label: `${value} Ko`
+        };
     } else {
-        return [value, `${value} Mo`];
+        const value = (fileSize / oneMbSize).toFixed(1);
+        return {
+            size: parseInt(value),
+            suffix: 'MB',
+            label: `${value} Mo`
+        };
     }
 }
 
 /**
- * Calcule la taille de l'image
- * @param {number} number
- * @returns {number}
- */
-function getFileSize(number) {
-    if (number < oneKbSize) {
-        return number;
-    } else if (number >= oneKbSize && number < oneMbSize) {
-        return parseInt((number / oneKbSize).toFixed(1));
-    } else {
-        return parseInt((number / oneMbSize).toFixed(1));
-    }
-}
-
-
-/**
- * 
- * @param {file} file
+ * Convertit un fichier en blob explicitement
+ * @param {File} file
  * @returns {Promise<unknown>}
- * @constructor
  */
-function ConvertFileToBase64(file){
-    try {
-        //Crée une promesse et retourne si succès le string base64
-        return new Promise((resolve, reject) => {
-            // instancie une variable constante FileReader pour lire le contenu de l'image
-            const reader = new FileReader();
+function ConvertFileToBlobAsync(file) {
+    return new Promise((resolve, reject) => {
+        
+        // Lire le fichier comme un Blob
+        const reader = new FileReader();
 
-            // évenement se déclenchant lorsque la lecture a réussi
-            reader.onload = () => {
-                console.log(reader.result);
-                resolve(reader.result.toString());
-            };
+        reader.onload = (event) => {
+            
+            // Le contenu du fichier est dans event.target.result
+            const fileBlob = new Blob([event.target.result], { type: file.type });
+            
+            // Utiliser le blob comme nécessaire
+            console.log("Blob du fichier:", fileBlob);
+            resolve(fileBlob);
+        };
+        
+        reader.onerror = (error) => {
+            console.error(error)
+            reject(error);
+        };
 
-            //évenement se déclenchant lorsque la lecture a échoué
-            reader.onerror = (error) => {
-                console.error(error);
-                reject(error);
-            };
-
-            // Lit le contenu du blob de l'image
-            reader.readAsDataURL(file);
-        });
-
-    } catch (error) {
-        console.error(error);
-    }
+        reader.readAsArrayBuffer(file);
+    });
 }

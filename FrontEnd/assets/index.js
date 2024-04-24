@@ -21,6 +21,7 @@ const CategoriesSet = new Set();
 const WorksSet = new Set();
 
 const loginLinkElement = document.getElementById("loginLink");
+const filterAllLink = document.getElementById("filter_all");
 
 /*
  * Evenement se déclanchant lorsque DOM est entièrement chargé et analysé, 
@@ -34,6 +35,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     await LoadAllWorksFromApi();
 
     AddEventClickOnAllModalLink();
+});
+
+filterAllLink.addEventListener('click', function (clickEvent) {
+    LoadWorksFromCategoryToGallery(null);
 });
 
 /*
