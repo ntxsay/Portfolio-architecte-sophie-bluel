@@ -1,25 +1,3 @@
-/**
- * Nom de la clé contenant les catégories dans le LocalStorage
- * @type {string}
- */
-const categoriesLocalStorageName = "categories";
-
-/**
- * Nom de la clé contenant les works dans le LocalStorage
- * @type {string}
- */
-const worksLocalStorageName = "works";
-
-/**
- * Obtient ou définit un tableau contenant les catégories
- */
-const CategoriesSet = new Set();
-
-/**
- * Obtient ou définit un tableau de works
- */
-const WorksSet = new Set();
-
 const loginLinkElement = document.getElementById("loginLink");
 const filterAllLink = document.getElementById("filter_all");
 
@@ -37,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     AddEventClickOnAllModalLink();
 });
 
-filterAllLink.addEventListener('click', function (clickEvent) {
+filterAllLink.addEventListener('click', function () {
     LoadWorksFromCategoryToGallery(null);
 });
 
@@ -63,11 +41,9 @@ loginLinkElement.addEventListener('click', function () {
     const tokenValue = window.localStorage.getItem("token");
     if (tokenValue === null || tokenValue === "") {
         window.location.href = "login.html";
-        SetToAuthenticatedOnDOM();
     } else {
         window.localStorage.removeItem("token");
         window.location.href = "index.html";
-        SetToNotAuthenticatedOnDom();
     }
 });
 

@@ -1,4 +1,15 @@
 /**
+ * Nom de la clé contenant les works dans le LocalStorage
+ * @type {string}
+ */
+const worksLocalStorageName = "works";
+
+/**
+ * Obtient ou définit un tableau de works
+ */
+const WorksSet = new Set();
+
+/**
  * Récupère tous les works depuis l'API
  */
 async function LoadAllWorksFromApi() {

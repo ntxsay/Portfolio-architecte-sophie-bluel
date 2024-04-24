@@ -1,4 +1,15 @@
 /**
+ * Nom de la clé contenant les catégories dans le LocalStorage
+ * @type {string}
+ */
+const categoriesLocalStorageName = "categories";
+
+/**
+ * Obtient ou définit un tableau contenant les catégories
+ */
+const CategoriesSet = new Set();
+
+/**
  * Récupère toutes les catégories depuis l'API
  */
 async function LoadAllCategoriesFromApi() {

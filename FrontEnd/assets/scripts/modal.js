@@ -223,7 +223,7 @@ const onWorkAddedPhoto = async function (changeEvent, fileInput) {
         return;
     }
 
-    if (!isSelectedFileTypeValid(currentFileSelected)) {
+    if (!IsSelectedFileTypeValid(currentFileSelected)) {
         //Ecrit et affiche un message d'erreur
         spanError.innerText = "Le format du fichier n'est pas correct.";
         spanError.style.display = "block";
@@ -309,7 +309,7 @@ function IsWorkFormValid() {
         return false;
     }
 
-    if (!isSelectedFileTypeValid(currentFileSelected)) {
+    if (!IsSelectedFileTypeValid(currentFileSelected)) {
         spanError.innerText = "Le format du fichier n'est pas correct.";
         spanError.style.display = "block";
         return false;
@@ -580,7 +580,7 @@ function CreateNewWorkInfos(form) {
  * @param file
  * @returns {boolean}
  */
-function isSelectedFileTypeValid(file) {
+function IsSelectedFileTypeValid(file) {
     return fileTypes.includes(file.type);
 }
 
