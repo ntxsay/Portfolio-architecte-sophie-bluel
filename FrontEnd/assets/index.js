@@ -9,8 +9,8 @@ const filterAllLink = document.getElementById("filter_all");
 document.addEventListener('DOMContentLoaded', async function () {
     LoadLoginUi();
 
-    await LoadAllCategoriesFromApi();
-    await LoadAllWorksFromApi();
+    await LoadAllCategoriesFromApiAsync();
+    await LoadAllWorksFromApiAsync();
 
     AddEventClickOnAllModalLink();
 });

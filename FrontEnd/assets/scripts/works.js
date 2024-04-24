@@ -12,7 +12,7 @@ const WorksSet = new Set();
 /**
  * Récupère tous les works depuis l'API
  */
-async function LoadAllWorksFromApi() {
+async function LoadAllWorksFromApiAsync() {
     await fetch('http://localhost:5678/api/works')
         .then(response => {
             //si le GET n'a pas réussi alors on lève une exception 
@@ -25,7 +25,7 @@ async function LoadAllWorksFromApi() {
         })
         .then(async (works) => {
             // On met à jour les works localement et dans la variable globale WorksSet
-            await UpdateWorks(works);
+            await UpdateWorksAsync(works);
 
             // On récupère tous les works pour les afficher dans le dom via la fonction suivante
             AddWorksToGallery(works);
@@ -42,7 +42,7 @@ async function LoadAllWorksFromApi() {
  * Met à jour la liste les works dans le stockage local
  * @param {Array} works
  */
-async function UpdateWorks(works) {
+async function UpdateWorksAsync(works) {
 
     //On efface le contenu précédent du tableau de works
     WorksSet.clear();

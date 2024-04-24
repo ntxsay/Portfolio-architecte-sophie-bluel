@@ -13,7 +13,7 @@ const CategoriesSet = new Set();
 /**
  * Récupère toutes les catégories depuis l'API
  */
-async function LoadAllCategoriesFromApi() {
+async function LoadAllCategoriesFromApiAsync() {
     await fetch('http://localhost:5678/api/categories')
         .then(response => {
             //si le GET n'a pas réussi alors on lève une exception 
