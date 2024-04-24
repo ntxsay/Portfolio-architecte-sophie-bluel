@@ -543,7 +543,7 @@ function CreateNewWorkInfos(form) {
     inputTextTitle.required = true;
     inputTextTitle.onchange = () => {
         IsWorkFormValid();
-    }
+    };
     projectInfosContainer.appendChild(inputTextTitle);
 
     //Création du label des catégories
@@ -572,6 +572,9 @@ function CreateNewWorkInfos(form) {
         categoryOption.text = category.name;
         selectCategory.add(categoryOption, null);
     });
+    selectCategory.onchange = () => {
+        IsWorkFormValid();
+    };
 
     //Création du span contenant les erreurs
     const spanError = document.createElement("span");

@@ -255,8 +255,7 @@ a#works-editor-link {
 }
 
 #contact form,
-#log_in form
-{
+#log_in form {
     text-align: left;
     margin-top: 30px;
     display: flex;
@@ -266,8 +265,7 @@ a#works-editor-link {
 #contact input,
 #log_in input,
 #works-add-photo-container .works-project-infos input,
-#works-add-photo-container .works-project-infos select
-{
+#works-add-photo-container .works-project-infos select {
     height: 50px;
     font-size: 1.2em;
     border: none;
@@ -425,15 +423,16 @@ button.modal-back-button {
 /***** Works Editor Modal *****/
 
 #add-photo-btn,
-#validate-photo-btn{
+#validate-photo-btn {
     display: none;
     border: none;
 }
 
 #add-photo-btn.selected,
-#validate-photo-btn.selected{
+#validate-photo-btn.selected {
     display: block;
 }
+
 #validate-photo-btn.disabled {
     background: #A7A7A7;
 }
@@ -463,15 +462,16 @@ button.modal-back-button {
     width: 100%;
 }
 
-.work-item a {
+.work-item button {
     position: absolute;
     top: 6px;
     right: 5px;
     padding: 3px 4px;
     background-color: black;
+    border-style: none;
     border-radius: 2px;
     color: white;
-    text-decoration: none;
+    cursor: pointer;
 }
 
 .work-item span i {

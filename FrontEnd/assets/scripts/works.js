@@ -89,7 +89,7 @@ function LoadOfflineWorks() {
  * @param {number|null} idCategory Représente l'id de catégorie. Si l'id de catégorie est définit comme null cela signifie que l'on affiche les works de toutes les catégories
  */
 function LoadWorksFromCategoryToGallery(idCategory) {
-    
+
     //Nom de l'id du filtre à sélectionner
     const filterItemIdToSelect = GetFilterItemId(idCategory);
 
@@ -112,9 +112,9 @@ function LoadWorksFromCategoryToGallery(idCategory) {
         filterToSelect.classList.add("selected");
 
     //Retourne les works qui ont l'id de catégorie spécifié
-    const worksInCategory = idCategory === null || isNaN(idCategory) 
-        ? WorksSet 
-        : Array.from(WorksSet).filter(work => work.categoryId === idCategory);
+    const worksInCategory = idCategory === null || isNaN(idCategory)
+        ? WorksSet
+        : Array.from(WorksSet).filter(work => parseInt(work.categoryId) === idCategory);
 
     //Charge les works dans la galerie
     AddWorksToGallery(worksInCategory);
@@ -146,16 +146,25 @@ function AddWorksToGallery(works) {
  * @param {Object} work
  */
 function AddWorkToGallery(work) {
-    if (work === null || work === undefined){
+    if (work === null || work === undefined) {
         console.error("Le work n'est pas valide");
         return;
     }
+
+    const workElementId = GetWorkFigureItemId(work.id);
+    if (workElementId === null) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+    
     // Déclare une constante du div ayant la classe "gallery" depuis son parent.
     const gallery = document.querySelector("#portfolio .gallery");
 
+    
     //Création du noeud figure, le parent
     const figureHtmlElement = document.createElement("figure");
-
+    figureHtmlElement.id = workElementId;
+    
     // Création du noeud Img premier enfant
     const imageHtmlElement = document.createElement("img");
     imageHtmlElement.alt = work.title;
@@ -173,6 +182,35 @@ function AddWorkToGallery(work) {
 
     //Ajoute la balise à gallery
     gallery.appendChild(figureHtmlElement);
+}
+
+/**
+ * Supprime un work de la galerie dans le DOM
+ * @param {number} workId
+ */
+function RemoveWorkFromGallery(workId) {
+    if (isNaN(workId)) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+
+    const workElementId = GetWorkFigureItemId(workId);
+    if (workElementId === null) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+
+    // Déclare une constante du div ayant la classe "gallery" depuis son parent.
+    const gallery = document.querySelector("#portfolio .gallery");
+
+    //Récupère la figure à supprimer du DOM
+    const figureHtmlElement = document.getElementById(workElementId);
+    if (!figureHtmlElement) {
+        console.warn("L'élément à supprimer n'existe pas dans le DOM.");
+        return;
+    }
+
+    gallery.removeChild(figureHtmlElement);
 }
 
 /**
@@ -200,16 +238,23 @@ function AddWorksToModal(works) {
  * @param {Object} work
  */
 function AddWorkToModal(work) {
-    if (work === null || work === undefined){
+    if (work === null || work === undefined) {
         console.error("Le work n'est pas valide");
         return;
     }
-    
+
+    const workElementId = GetWorkModalFigureItemId(work.id);
+    if (workElementId === null) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+
     // récupère le conteneur qui contient les works
     const gallery = document.querySelector("#works-manager-list-container");
 
     //Création du noeud figure, le parent
     const figureHtmlElement = document.createElement("figure");
+    figureHtmlElement.id = workElementId;
     figureHtmlElement.classList.add("work-item");
 
     // Création du noeud Img premier enfant
@@ -220,21 +265,50 @@ function AddWorkToModal(work) {
     //Ajoute l'image à la figure
     figureHtmlElement.appendChild(imageHtmlElement);
 
-    //Ajoute le lien 
-    const aDeleteLink = document.createElement("a");
-    aDeleteLink.href = "#";
-    aDeleteLink.onclick = async () => {
+    //Ajoute le bouton de suppression 
+    const deleteButton = document.createElement("button");
+    deleteButton.title = "Supprimer le work : " + work.title;
+    deleteButton.onclick = async () => {
         await DeleteWorkByIdAsync(work.id);
     }
-    figureHtmlElement.appendChild(aDeleteLink);
+    figureHtmlElement.appendChild(deleteButton);
 
     //Ajoute l'icone de la corbeille
     const deleteIcon = document.createElement("i");
     deleteIcon.classList.add("fa-solid", "fa-trash-can");
-    aDeleteLink.appendChild(deleteIcon);
-    
+    deleteButton.appendChild(deleteIcon);
+
     //Ajoute la balise à gallery
     gallery.appendChild(figureHtmlElement);
+}
+
+/**
+ * Supprime un work à la galerie du modal dans le DOM
+ * @param {number} workId
+ */
+function RemoveWorkFromModal(workId) {
+    if (isNaN(workId)) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+
+    const workElementId = GetWorkModalFigureItemId(workId);
+    if (workElementId === null) {
+        console.error("L'id du work n'est pas valide");
+        return;
+    }
+
+    // récupère le conteneur qui contient les works
+    const gallery = document.querySelector("#works-manager-list-container");
+
+    //Récupère la figure à supprimer du DOM
+    const figureHtmlElement = document.getElementById(workElementId);
+    if (!figureHtmlElement) {
+        console.warn("L'élément à supprimer n'existe pas dans le DOM.");
+        return;
+    }
+
+    gallery.removeChild(figureHtmlElement);
 }
 
 /**
@@ -263,7 +337,7 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
     formData.append('title', title);
     formData.append('category', categoryId);
     formData.append('image', fileBlob, filename);
-    
+
     // Configuration de la requête
     // Attention ne pas utiliser de content-type sous peine  de faire échouer la rêquete voir : https://stackoverflow.com/questions/35192841/how-do-i-post-with-multipart-form-data-using-fetch
     const requestOptions = {
@@ -284,26 +358,26 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
                 message: submitResponse.statusText
             };
         }
-        
+
         //Convertit la réponse en json qui représente le work récemment créé
         const jsonWork = await submitResponse.json();
-        
+
         //Ajoute le work à la variable globale
         WorksSet.add(jsonWork);
-        
+
         //Ajoute le work dans la gallerie uniquement si le filtre sélectionné correspond à l'id de catégorie ou sur tous
-        if (IsSelectedCategory(categoryId, true)){
+        if (IsSelectedCategory(categoryId, true)) {
             //Ajoute le work à la gallerie
             AddWorkToGallery(jsonWork);
         }
-        
+
         console.log("Le work a été inséré avec succès.");
-        
+
         return {
             isSucces: true,
             message: "Le work a été inséré avec succès."
         };
-        
+
     } catch (error) {
         console.error(error);
         return {
@@ -319,6 +393,8 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
  */
 async function DeleteWorkByIdAsync(workId) {
     let workToDelete = null;
+
+    //Lance une boucle pour récupérer le work à supprimer puis sort de la boucle
     for (let work of WorksSet) {
         if (work.id === workId) {
             workToDelete = work;
@@ -326,12 +402,16 @@ async function DeleteWorkByIdAsync(workId) {
         }
     }
 
+    //Si le work n'a pas été trouvé alors on quitte la fonction
     if (workToDelete === null) {
-        console.error("Le work à supprimer n'existe pas.");
+        console.warn("Le work à supprimer n'existe pas.");
         return;
     }
 
+    // On récupère le token de l'utilisateur
     const token = window.localStorage.getItem("token");
+
+    //Si le token est null ou vide alors on affiche l'erreur et on sort de la fonction
     if (token === null || token === "") {
         console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
         alert("Impossible de restituer le token de l'utilisateur, connectez-vous !");
@@ -353,10 +433,11 @@ async function DeleteWorkByIdAsync(workId) {
         // Récupère la réponse de la requette DELETE décrite dans les options de la réponse ci-dessus
         const response = await fetch(`http://localhost:5678/api/works/${workId}`, requestOptions);
 
-        // S'il y a un problème avec la requête alors l
+        // S'il y a un problème avec la requête alors on affiche l'erreur et on qui la fonction
         if (!response.ok) {
             ManageBadRequestStatusCodeOnDeleteWork(response.status);
             console.error('Une erreur est survenue lors de la suppression de la ressource : ', response.statusText);
+            alert(response.statusText);
             return;
         }
     } catch (error) {
@@ -364,16 +445,15 @@ async function DeleteWorkByIdAsync(workId) {
         return;
     }
 
+    // Supprime le work du Set
+    WorksSet.delete(workToDelete);
+    
     // Suppression réussie
     console.log('La ressource a été supprimée avec succès');
 
-    WorksSet.delete(workToDelete);
-    console.log(WorksSet.has(workToDelete));
-
-    const updatedWorks = Array.from(WorksSet);
-
-    AddWorksToGallery(updatedWorks);
-    AddWorksToModal(updatedWorks);
+    //Supprime l'élément de la galerie
+    RemoveWorkFromGallery(workId);
+    RemoveWorkFromModal(workId);
 }
 
 /**
@@ -440,3 +520,24 @@ function CreateOrRemoveWorksEditorUiLink(removeAuthorizedContent) {
     titleContainerElement.appendChild(worksEditorLinkElement);
 }
 
+/**
+ * retourne l'id de l'éléement qui représente l'id du work
+ * @param {number} workId
+ * @returns {null|string}
+ */
+function GetWorkFigureItemId(workId) {
+    return isNaN(workId)
+        ? null
+        : "work_" + workId
+}
+
+/**
+ * retourne l'id de l'éléement dans la modale qui représente l'id du work
+ * @param {number} workId
+ * @returns {null|string}
+ */
+function GetWorkModalFigureItemId(workId) {
+    return isNaN(workId)
+        ? null
+        : "work_modal_" + workId
+}
