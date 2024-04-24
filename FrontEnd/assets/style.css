@@ -162,65 +162,59 @@ li:hover {
     justify-content: center;
 }
 
-a#works-editor-link {
-    font-family: "Work Sans", sans-serif;
-    font-size: 14px;
-    color: black;
-    text-decoration: none;
-}
-
-#portfolio a#works-editor-link i {
-    margin-right: 10px;
-}
-
 #portfolio h2 {
     text-align: center;
     margin-bottom: 1em;
     margin-right: 31px;
 }
 
-/**** Filtres ****/
+#works-open-modal-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-family: "Work Sans", sans-serif;
+    font-size: 14px;
+    color: black;
+    text-decoration: none;
+    display: none;
+}
+
+#works-open-modal-button i {
+    margin-right: 10px;
+}
+
+#works-open-modal-button.isVisible {
+    display: block;
+}
+
+    /**** Filtres ****/
 
 .filter-container {
     margin: 50px 0;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.filter-container > ul {
-    list-style: none;
-    display: flex;
     flex-wrap: wrap;
     gap: 10px;
 }
 
-.filter-container > ul > li {
+.filter-container .filter-item {
     border: 1px solid #1D6154;
     border-radius: 60px;
     font-family: Syne, sans-serif;
     font-size: 18px;
     font-weight: 700;
     text-align: center;
-    color: #1D6154;
     cursor: pointer;
+    color: black;
+    padding: 9px 20px;
+    background-color: white;
 }
 
-.filter-container > ul > li.selected {
+.filter-container .filter-item.selected {
     border: 1px solid #1D6154;
     color: white;
     background-color: #1D6154;
-}
-
-.filter-container > ul > li > a {
-    display: inline-block;
-    text-decoration: none;
-    color: black;
-    padding: 9px 20px;
-}
-
-.filter-container > ul > li.selected > a {
-    color: white;
 }
 
 
@@ -264,8 +258,8 @@ a#works-editor-link {
 
 #contact input,
 #log_in input,
-#works-add-photo-container .works-project-infos input,
-#works-add-photo-container .works-project-infos select {
+#modal-new-work-container .works-project-infos input,
+#modal-new-work-container .works-project-infos select {
     height: 50px;
     font-size: 1.2em;
     border: none;
@@ -274,7 +268,7 @@ a#works-editor-link {
 
 #contact label,
 #log_in label,
-#works-add-photo-container .works-project-infos label {
+#modal-new-work-container .works-project-infos label {
     margin: 2em 0 1em 0;
 }
 
@@ -403,7 +397,34 @@ button.modal-back-button {
     justify-content: center;
 }
 
-.modal-buttons-container button {
+
+
+.modal-buttons-container a span {
+}
+
+/***** Works Editor Modal *****/
+
+#add-photo-btn,
+#validate-photo-btn {
+    border: none;
+}
+
+#validate-photo-btn.disabled {
+    background: #A7A7A7;
+}
+
+#modal-works-manager-container,
+#modal-new-work-container {
+    display: none;
+}
+
+#modal-works-manager-container.selected,
+#modal-new-work-container.selected {
+    display: block;
+}
+
+#modal-works-manager-container button,
+#modal-new-work-container button {
     font-family: 'Syne', sans-serif;
     font-size: 14px;
     font-weight: 700;
@@ -417,54 +438,26 @@ button.modal-back-button {
     cursor: pointer;
 }
 
-.modal-buttons-container a span {
-}
-
-/***** Works Editor Modal *****/
-
-#add-photo-btn,
-#validate-photo-btn {
-    display: none;
-    border: none;
-}
-
-#add-photo-btn.selected,
-#validate-photo-btn.selected {
-    display: block;
-}
-
-#validate-photo-btn.disabled {
-    background: #A7A7A7;
-}
-
-#works-manager-list-container,
-#works-add-photo-container {
-    display: none;
-}
-
-#works-manager-list-container {
-    list-style: none;
-}
-
-#works-manager-list-container.selected {
+#modal-works-manager-container.selected .works-list {
     display: flex;
     gap: 29px 11px;
     justify-content: flex-start;
     flex-wrap: wrap;
 }
 
-#works-manager-list-container .work-item {
+
+#modal-works-manager-container figure {
     width: 18%;
     position: relative;
 }
 
-.work-item img {
+#modal-works-manager-container figure img {
     width: 100%;
 }
 
-.work-item button {
+#modal-works-manager-container figure button {
     position: absolute;
-    top: 6px;
+    top: -20px;
     right: 5px;
     padding: 3px 4px;
     background-color: black;
@@ -474,18 +467,15 @@ button.modal-back-button {
     cursor: pointer;
 }
 
-.work-item span i {
+#modal-works-manager-container figure span i {
     color: white;
     font-size: 11px;
 }
 
 /**** Ajout photo ****/
 
-#works-add-photo-container.selected {
-    display: block;
-}
 
-#works-add-photo-container .works-input-photo-container {
+#modal-new-work-container .works-input-photo-container {
     display: grid;
     grid-template-rows: 76px auto auto auto;
     row-gap: 7px;
@@ -496,22 +486,22 @@ button.modal-back-button {
     height: calc(169px - 26px);
 }
 
-#works-add-photo-container .works-input-photo-container.hidden {
+#modal-new-work-container .works-input-photo-container.hidden {
     display: none;
 }
 
-#works-add-photo-container .icon-container {
+#modal-new-work-container .icon-container {
     display: flex;
     justify-content: center;
 }
 
-#works-add-photo-container i {
+#modal-new-work-container i {
     font-size: 68px;
     color: #B9C5CC;
 }
 
 /*Masque l'input */
-#works-add-photo-container .works-input-photo-container input[type=file] {
+#modal-new-work-container .works-input-photo-container input[type=file] {
     display: none;
 }
 
@@ -533,14 +523,14 @@ button.modal-back-button {
     text-align: center;
 }
 
-#works-add-photo-container .works-project-infos {
+#modal-new-work-container .works-project-infos {
     text-align: left;
     margin-top: 2px;
     display: flex;
     flex-direction: column;
 }
 
-#works-add-photo-container .works-preview-photo-container {
+#modal-new-work-container .works-preview-photo-container {
     display: flex;
     justify-content: center;
     background: #E8F1F6;
@@ -548,7 +538,7 @@ button.modal-back-button {
     height: 169px;
 }
 
-#works-add-photo-container .works-preview-photo-container.hidden {
+#modal-new-work-container .works-preview-photo-container.hidden {
     display: none;
 }
 

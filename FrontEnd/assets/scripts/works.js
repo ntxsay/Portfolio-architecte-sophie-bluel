@@ -1,315 +1,111 @@
-/**
- * Nom de la clé contenant les works dans le LocalStorage
- * @type {string}
- */
-const worksLocalStorageName = "works";
+const editWorkButton = document.getElementById("works-open-modal-button");
 
-/**
- * Obtient ou définit un tableau de works
+/*
+ * Se produit lorsque l'utilisateur clique sur le bouton pour modifier les works
  */
-const WorksSet = new Set();
+editWorkButton.addEventListener('click', async function (eventClick) {
+    eventClick.preventDefault();
+    
+    //Récupère les works optimisés pour la modale
+    await GetWorksFromApiAsync(0, true);
+
+    //affiche la liste des 
+    
+    if (modal.classList.contains("closed"))
+        modal.classList.remove("closed");
+
+    modal.setAttribute("aria-hidden", "false");
+    modal.setAttribute("aria-modal", "true");
+    
+    DisplayModalWorkManager();
+});
 
 /**
  * Récupère tous les works depuis l'API
+ * @param {number} categoryId représente L'id de catégorie. Si l'id de catégorie est inférieur ou égal à 0 alors on récupère tous les works sinon uniquement ceux de la catégorie spécifiée
+ * @param isForModal
  */
-async function LoadAllWorksFromApiAsync() {
-    await fetch('http://localhost:5678/api/works')
-        .then(response => {
-            //si le GET n'a pas réussi alors on lève une exception 
-            if (!response.ok) {
-                throw new Error(response.statusMessage);
-            }
+async function GetWorksFromApiAsync(categoryId = 0, isForModal = false) {
+    try {
 
-            //sinon convertit la réponse au format json et retourne la réponse
-            return response.json();
-        })
-        .then(async (works) => {
-            // On met à jour les works localement et dans la variable globale WorksSet
-            await UpdateWorksAsync(works);
+        //Lance la requête afin de récupérer les works depuis l'api
+        const response = await fetch('http://localhost:5678/api/works');
+        
+        //Convertit la réponse en Json
+        const works = await response.json();
+        
+        //Filtre les works en fonction de l'id de catégorie
+        const filteredWorks =  categoryId <= 0 
+            ? works 
+            : works.filter((work) => work.categoryId === Number(categoryId));
 
-            // On récupère tous les works pour les afficher dans le dom via la fonction suivante
-            AddWorksToGallery(works);
-        })
-        .catch(error => {
-            // Affiche dans la console l'erreur
-            console.error('Erreur lors de la récupération des works:', error);
+        // Récupère le conteneur des works
+        const gallery = isForModal
+            ? document.querySelector("#modal-works-manager-container .works-list")
+            : document.querySelector("#portfolio .gallery");
 
-            LoadOfflineWorks();
+        // Efface le contenu de la galerie
+        gallery.innerHTML = "";
+
+        //S'il n'y a aucun works à charger alors on sort de la fonction
+        if (filteredWorks.length === 0)
+            return;
+        
+        //Ajoute chaque work à la galerie
+        filteredWorks.forEach((work) => {
+            const figure = CreateWork(work, isForModal);
+            gallery.appendChild(figure);
         });
+    } catch (e) {
+        // Affiche un message d'erreur si la récupération des works échoue.
+        console.error(e);
+    }
 }
 
-/**
- * Met à jour la liste les works dans le stockage local
- * @param {Array} works
- */
-async function UpdateWorksAsync(works) {
-
-    //On efface le contenu précédent du tableau de works
-    WorksSet.clear();
-
-    // S'il n'y a pas de work à charger (depuis l'API)
-    // Alors on efface les works dans le stockage local
-    if (works.length === 0) {
-        window.localStorage.removeItem(worksLocalStorageName)
-        return;
-    }
-
-    //On ajoute les nouveau works dans le tableau
-    for (let i = 0; i < works.length; i++) {
-        WorksSet.add(works[i]);
-    }
-
-    //On enregistre le tableau dans le stockage local au format string json
-    window.localStorage.setItem(worksLocalStorageName, JSON.stringify(Array.from(WorksSet)));
-}
 
 /**
- * Charge les works stockées localement
+ * Crée un work
+ * @param {Object} work
+ * @param isForModal
+ * @returns {HTMLElement}
  */
-function LoadOfflineWorks() {
+function CreateWork(work, isForModal = false) {
+    //Création de la figure
+    const figure = document.createElement("figure");
+    figure.dataset.id = work.id;
 
-    //Retourne une variable de type string contenant les works au format JSON si elle existe
-    const localStorageWorks = window.localStorage.getItem(worksLocalStorageName);
+    // Création de l'image et l'ajoute à son parent
+    const image = document.createElement("img");
+    image.alt = work.title;
+    image.src = work.imageUrl;
+    figure.appendChild(image);
 
-    //Sinon on écrit un message d'erreur et on sort de la function
-    if (localStorageWorks === null || localStorageWorks === "{}") {
-        console.error("impossible de charger les works en hors-ligne.");
-        return;
+    // Création du caption et l'ajoute à son parent s'il ne s'agit pas d'élément pour le modal
+    if (!isForModal) {
+        const caption = document.createElement("figcaption");
+        caption.textContent = work.title;
+        figure.appendChild(caption);
     }
 
-    //Convertit la chaine en objet json
-    const localWorks = JSON.parse(localStorageWorks);
-
-    // On récupère toutes les catégories pour les afficher dans le dom via la fonction suivante
-    AddWorksToGallery(localWorks);
-}
-
-/**
- * Affiche dans le DOM tous works dont l'id de catégorie correspond à l'id de catégorie en paramètre
- * @param {number|null} idCategory Représente l'id de catégorie. Si l'id de catégorie est définit comme null cela signifie que l'on affiche les works de toutes les catégories
- */
-function LoadWorksFromCategoryToGallery(idCategory) {
-
-    //Nom de l'id du filtre à sélectionner
-    const filterItemIdToSelect = GetFilterItemId(idCategory);
-
-    //Récupère tous les filtre
-    const allFilterItems = document.querySelectorAll("#portfolio li.filter-item");
-
-    //Lance une boucle pour désélectionner tous les item dont l'id ne correspond pas à celui déclaré ci-dessus 
-    for (let i = 0; i < allFilterItems.length; i++) {
-        const filterItem = allFilterItems[i];
-        if (filterItem.firstElementChild.id !== filterItemIdToSelect && filterItem.classList.contains("selected")) {
-            filterItem.classList.remove("selected");
+    //Ajoute le bouton de suppression s'il s'agit d'un élément du modal
+    if (isForModal) {
+        const deleteButton = document.createElement("button");
+        deleteButton.title = "Supprimer le work : " + work.title;
+        deleteButton.onclick = async () => {
+            await DeleteWorkByIdAsync(work.id);
         }
-    }
+        figure.appendChild(deleteButton);
 
-    //Retourne le filtre à sélectionner
-    const filterToSelect = document.getElementById(filterItemIdToSelect).parentElement;
-
-    //S'il n'a pas la classe "selected" alors on l'ajoute
-    if (!filterToSelect.classList.contains("selected"))
-        filterToSelect.classList.add("selected");
-
-    //Retourne les works qui ont l'id de catégorie spécifié
-    const worksInCategory = idCategory === null || isNaN(idCategory)
-        ? WorksSet
-        : Array.from(WorksSet).filter(work => parseInt(work.categoryId) === idCategory);
-
-    //Charge les works dans la galerie
-    AddWorksToGallery(worksInCategory);
-}
-
-
-/**
- * Ajoute tous les works à la galerie dans le DOM
- * @param {Array} works
- */
-function AddWorksToGallery(works) {
-
-    // Déclare une constante du div ayant la classe "gallery" depuis son parent.
-    const gallery = document.querySelector("#portfolio .gallery");
-
-    // Efface le contenu de la galerie
-    gallery.innerHTML = "";
-
-    //S'il n'y a aucun works à charger alors on sort de la fonction
-    if (works.length === 0)
-        return;
-
-    //Ajoute un élément html pour chaque work
-    works.forEach((work) => AddWorkToGallery(work));
-}
-
-/**
- * Ajoute un work à la galerie dans le DOM
- * @param {Object} work
- */
-function AddWorkToGallery(work) {
-    if (work === null || work === undefined) {
-        console.error("Le work n'est pas valide");
-        return;
-    }
-
-    const workElementId = GetWorkFigureItemId(work.id);
-    if (workElementId === null) {
-        console.error("L'id du work n'est pas valide");
-        return;
+        //Ajoute l'icone de la corbeille
+        const deleteIcon = document.createElement("i");
+        deleteIcon.classList.add("fa-solid", "fa-trash-can");
+        deleteButton.appendChild(deleteIcon);
     }
     
-    // Déclare une constante du div ayant la classe "gallery" depuis son parent.
-    const gallery = document.querySelector("#portfolio .gallery");
-
-    
-    //Création du noeud figure, le parent
-    const figureHtmlElement = document.createElement("figure");
-    figureHtmlElement.id = workElementId;
-    
-    // Création du noeud Img premier enfant
-    const imageHtmlElement = document.createElement("img");
-    imageHtmlElement.alt = work.title;
-    imageHtmlElement.src = work.imageUrl;
-
-    //Ajoute l'image à la figure
-    figureHtmlElement.appendChild(imageHtmlElement);
-
-    // Création du noeud figCaption deuxième enfant
-    const captionHtmlElement = document.createElement("figcaption");
-    captionHtmlElement.innerText = work.title;
-
-    //Ajoute le caption à la figure
-    figureHtmlElement.appendChild(captionHtmlElement);
-
-    //Ajoute la balise à gallery
-    gallery.appendChild(figureHtmlElement);
+    //Retourne la figure
+    return figure;
 }
 
-/**
- * Supprime un work de la galerie dans le DOM
- * @param {number} workId
- */
-function RemoveWorkFromGallery(workId) {
-    if (isNaN(workId)) {
-        console.error("L'id du work n'est pas valide");
-        return;
-    }
-
-    const workElementId = GetWorkFigureItemId(workId);
-    if (workElementId === null) {
-        console.error("L'id du work n'est pas valide");
-        return;
-    }
-
-    // Déclare une constante du div ayant la classe "gallery" depuis son parent.
-    const gallery = document.querySelector("#portfolio .gallery");
-
-    //Récupère la figure à supprimer du DOM
-    const figureHtmlElement = document.getElementById(workElementId);
-    if (!figureHtmlElement) {
-        console.warn("L'élément à supprimer n'existe pas dans le DOM.");
-        return;
-    }
-
-    gallery.removeChild(figureHtmlElement);
-}
-
-/**
- * Ajoute tous les works à la galerie du modal dans le DOM
- * @param {Array} works
- */
-function AddWorksToModal(works) {
-
-    // récupère le conteneur qui contient les works
-    const gallery = document.querySelector("#works-manager-list-container");
-
-    // Efface le contenu de la galerie
-    gallery.innerHTML = "";
-
-    //S'il n'y a aucun works à charger alors on sort de la fonction
-    if (works.length === 0)
-        return;
-
-    //Ajoute un élément html pour chaque work
-    works.forEach((work) => AddWorkToModal(work));
-}
-
-/**
- * Ajoute un work à la galerie du modal dans le DOM
- * @param {Object} work
- */
-function AddWorkToModal(work) {
-    if (work === null || work === undefined) {
-        console.error("Le work n'est pas valide");
-        return;
-    }
-
-    const workElementId = GetWorkModalFigureItemId(work.id);
-    if (workElementId === null) {
-        console.error("L'id du work n'est pas valide");
-        return;
-    }
-
-    // récupère le conteneur qui contient les works
-    const gallery = document.querySelector("#works-manager-list-container");
-
-    //Création du noeud figure, le parent
-    const figureHtmlElement = document.createElement("figure");
-    figureHtmlElement.id = workElementId;
-    figureHtmlElement.classList.add("work-item");
-
-    // Création du noeud Img premier enfant
-    const imageHtmlElement = document.createElement("img");
-    imageHtmlElement.alt = work.title;
-    imageHtmlElement.src = work.imageUrl;
-
-    //Ajoute l'image à la figure
-    figureHtmlElement.appendChild(imageHtmlElement);
-
-    //Ajoute le bouton de suppression 
-    const deleteButton = document.createElement("button");
-    deleteButton.title = "Supprimer le work : " + work.title;
-    deleteButton.onclick = async () => {
-        await DeleteWorkByIdAsync(work.id);
-    }
-    figureHtmlElement.appendChild(deleteButton);
-
-    //Ajoute l'icone de la corbeille
-    const deleteIcon = document.createElement("i");
-    deleteIcon.classList.add("fa-solid", "fa-trash-can");
-    deleteButton.appendChild(deleteIcon);
-
-    //Ajoute la balise à gallery
-    gallery.appendChild(figureHtmlElement);
-}
-
-/**
- * Supprime un work à la galerie du modal dans le DOM
- * @param {number} workId
- */
-function RemoveWorkFromModal(workId) {
-    if (isNaN(workId)) {
-        console.error("L'id du work n'est pas valide");
-        return;
-    }
-
-    const workElementId = GetWorkModalFigureItemId(workId);
-    if (workElementId === null) {
-        console.error("L'id du work n'est pas valide");
-        return;
-    }
-
-    // récupère le conteneur qui contient les works
-    const gallery = document.querySelector("#works-manager-list-container");
-
-    //Récupère la figure à supprimer du DOM
-    const figureHtmlElement = document.getElementById(workElementId);
-    if (!figureHtmlElement) {
-        console.warn("L'élément à supprimer n'existe pas dans le DOM.");
-        return;
-    }
-
-    gallery.removeChild(figureHtmlElement);
-}
 
 /**
  * Insère un nouveau work dans la base de données
@@ -322,13 +118,6 @@ function RemoveWorkFromModal(workId) {
  */
 async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) {
     const token = window.localStorage.getItem("token");
-    if (token === null || token === "") {
-        console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
-        return {
-            isSucces: false,
-            message: "Impossible de restituer le token de l'utilisateur, connectez-vous !"
-        };
-    }
 
     // Créer un objet FormData
     const formData = new FormData();
@@ -337,54 +126,32 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
     formData.append('title', title);
     formData.append('category', categoryId);
     formData.append('image', fileBlob, filename);
-
-    // Configuration de la requête
+    
     // Attention ne pas utiliser de content-type sous peine  de faire échouer la rêquete voir : https://stackoverflow.com/questions/35192841/how-do-i-post-with-multipart-form-data-using-fetch
-    const requestOptions = {
+    const response = await fetch("http://localhost:5678/api/works", {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`
         },
 
         body: formData
-    };
-
-    try {
-        const submitResponse = await fetch("http://localhost:5678/api/works", requestOptions);
-        if (!submitResponse.ok) {
-            console.error(submitResponse.statusText);
-            return {
-                isSucces: false,
-                message: submitResponse.statusText
-            };
-        }
-
-        //Convertit la réponse en json qui représente le work récemment créé
-        const jsonWork = await submitResponse.json();
-
-        //Ajoute le work à la variable globale
-        WorksSet.add(jsonWork);
-
-        //Ajoute le work dans la gallerie uniquement si le filtre sélectionné correspond à l'id de catégorie ou sur tous
-        if (IsSelectedCategory(categoryId, true)) {
-            //Ajoute le work à la gallerie
-            AddWorkToGallery(jsonWork);
-        }
-
-        console.log("Le work a été inséré avec succès.");
-
-        return {
-            isSucces: true,
-            message: "Le work a été inséré avec succès."
-        };
-
-    } catch (error) {
+    }).catch((error) => {
         console.error(error);
+    });
+
+    if (!response.ok){
         return {
             isSucces: false,
-            message: error.toString()
+            message: response.statusText
         };
     }
+
+    await GetWorksFromApiAsync(categoryId, false);
+
+    return {
+        isSucces: true,
+        message: "Le work a été inséré avec succès."
+    };
 }
 
 /**
@@ -392,34 +159,11 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
  * @param {number} workId
  */
 async function DeleteWorkByIdAsync(workId) {
-    let workToDelete = null;
-
-    //Lance une boucle pour récupérer le work à supprimer puis sort de la boucle
-    for (let work of WorksSet) {
-        if (work.id === workId) {
-            workToDelete = work;
-            break;
-        }
-    }
-
-    //Si le work n'a pas été trouvé alors on quitte la fonction
-    if (workToDelete === null) {
-        console.warn("Le work à supprimer n'existe pas.");
-        return;
-    }
-
     // On récupère le token de l'utilisateur
     const token = window.localStorage.getItem("token");
 
-    //Si le token est null ou vide alors on affiche l'erreur et on sort de la fonction
-    if (token === null || token === "") {
-        console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
-        alert("Impossible de restituer le token de l'utilisateur, connectez-vous !");
-        return;
-    }
-
-    // Création des options de la requête
-    const requestOptions = {
+    // Récupère la réponse de la requette DELETE décrite dans les options de la réponse ci-dessus
+    const response = await fetch(`http://localhost:5678/api/works/${workId}`, {
         method: 'DELETE',
         headers: {
             // Indique que le corps de la requête est en JSON
@@ -427,117 +171,32 @@ async function DeleteWorkByIdAsync(workId) {
             // On ajoute le token
             'Authorization': `Bearer ${token}`
         }
-    };
-
-    try {
-        // Récupère la réponse de la requette DELETE décrite dans les options de la réponse ci-dessus
-        const response = await fetch(`http://localhost:5678/api/works/${workId}`, requestOptions);
-
-        // S'il y a un problème avec la requête alors on affiche l'erreur et on qui la fonction
-        if (!response.ok) {
-            ManageBadRequestStatusCodeOnDeleteWork(response.status);
-            console.error('Une erreur est survenue lors de la suppression de la ressource : ', response.statusText);
-            alert(response.statusText);
-            return;
-        }
-    } catch (error) {
+    }).catch((error) => {
         console.error('Une erreur est survenue lors de la suppression de la ressource :', error);
+    });
+
+    if (!response.ok){
+        alert('Une erreur est survenue lors de la suppression de la ressource : ' + response.statusText);
         return;
     }
 
-    // Supprime le work du Set
-    WorksSet.delete(workToDelete);
-    
-    // Suppression réussie
-    console.log('La ressource a été supprimée avec succès');
-
-    //Supprime l'élément de la galerie
-    RemoveWorkFromGallery(workId);
-    RemoveWorkFromModal(workId);
-}
-
-/**
- * Gère l'action du DOM en cas d'erreur de la requête via le code du status
- * @param {number} statusCode
- */
-function ManageBadRequestStatusCodeOnDeleteWork(statusCode) {
-    switch (statusCode) {
-        // SI l'utilisateur n'est pas autoriser à accéder à cette ressource alors on force l'utilisateur à se connecter
-        case 401 : {
-            window.localStorage.removeItem("token");
-            window.location.href = "login.html";
-            break;
+    // Supprime le Work dans la modale
+    const modalFigures = document.querySelectorAll("#modal-works-manager-container .works-list figure");
+    if (modalFigures.length > 0){
+        const filteredFigures = Array.from(modalFigures).filter((f) => f.dataset.id === workId.toString());
+        if (filteredFigures.length > 0){
+            const gallery = document.querySelector("#modal-works-manager-container .works-list");
+            gallery.removeChild(filteredFigures[0]);
         }
     }
-}
 
-
-/**
- * Ajoute ou suprime le lien pour afficher la modale d'édition des Works
- * @param {boolean} removeAuthorizedContent Indique si le contenu autorisé tel que le lien qui permet de modifier les works doit être supprimés du DOM
- */
-function CreateOrRemoveWorksEditorUiLink(removeAuthorizedContent) {
-    const titleContainerElement = document.querySelector("#portfolio .title-container");
-    let worksEditorLinkElement = document.querySelector("#portfolio a.works-editor-link");
-
-    // Si lien de modification doit être supprimé
-    if (removeAuthorizedContent) {
-        // Si worksEditorLinkElement n'existe pas et que de toute façon allait être supprimé alors on sort de la fonction
-        if (!worksEditorLinkElement)
-            return;
-
-        // supprime le lien de modification des works du DOM
-        titleContainerElement.removeChild(worksEditorLinkElement);
-
-        return;
+    // Supprime le Work dans la modale
+    const figures = document.querySelectorAll("#portfolio .gallery figure");
+    if (figures.length > 0){
+        const filteredFigures = Array.from(figures).filter((f) => f.dataset.id === workId.toString());
+        if (filteredFigures.length > 0){
+            const gallery = document.querySelector("#portfolio .gallery");
+            gallery.removeChild(filteredFigures[0]);
+        } 
     }
-
-    // création de l'élément a
-    worksEditorLinkElement = document.createElement("a");
-
-    //Ancre représentant le modal à ouvrir
-    worksEditorLinkElement.href = "#works-Editor-modal";
-    worksEditorLinkElement.id = "works-editor-link";
-
-    //Ajoute la classe qui indique que ce lien pointe vers un modal
-    worksEditorLinkElement.classList.add("a-modal");
-
-    // Création de l'élément i;
-    const iconElement = document.createElement("i");
-    iconElement.classList.add("fa-solid", "fa-pen-to-square");
-
-    //Ajoute l'icone dans son parent
-    worksEditorLinkElement.appendChild(iconElement);
-
-    //Création du SPan contenant le texte
-    const textSpanElement = document.createElement("span");
-    textSpanElement.innerText = "modifier";
-
-    //ajoute le texte dans son parent
-    worksEditorLinkElement.appendChild(textSpanElement);
-
-    //Ajout du lien dans le parent
-    titleContainerElement.appendChild(worksEditorLinkElement);
-}
-
-/**
- * retourne l'id de l'éléement qui représente l'id du work
- * @param {number} workId
- * @returns {null|string}
- */
-function GetWorkFigureItemId(workId) {
-    return isNaN(workId)
-        ? null
-        : "work_" + workId
-}
-
-/**
- * retourne l'id de l'éléement dans la modale qui représente l'id du work
- * @param {number} workId
- * @returns {null|string}
- */
-function GetWorkModalFigureItemId(workId) {
-    return isNaN(workId)
-        ? null
-        : "work_modal_" + workId
 }
