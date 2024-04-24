@@ -89,12 +89,9 @@ function LoadOfflineWorks() {
  * @param {number|null} idCategory Représente l'id de catégorie. Si l'id de catégorie est définit comme null cela signifie que l'on affiche les works de toutes les catégories
  */
 function LoadWorksFromCategoryToGallery(idCategory) {
-
-    //Si l'id de catégorie n'est pas spécifié
-    const isIdCategoryNotSpecified = idCategory === null;
     
     //Nom de l'id du filtre à sélectionner
-    const filterItemIdToSelect = isIdCategoryNotSpecified ? "filter_all" : "filter_" + idCategory;
+    const filterItemIdToSelect = GetFilterItemId(idCategory);
 
     //Récupère tous les filtre
     const allFilterItems = document.querySelectorAll("#portfolio li.filter-item");
@@ -115,7 +112,9 @@ function LoadWorksFromCategoryToGallery(idCategory) {
         filterToSelect.classList.add("selected");
 
     //Retourne les works qui ont l'id de catégorie spécifié
-    const worksInCategory = isIdCategoryNotSpecified ? WorksSet : Array.from(WorksSet).filter(work => work.categoryId === idCategory);
+    const worksInCategory = idCategory === null || isNaN(idCategory) 
+        ? WorksSet 
+        : Array.from(WorksSet).filter(work => work.categoryId === idCategory);
 
     //Charge les works dans la galerie
     AddWorksToGallery(worksInCategory);
@@ -273,7 +272,6 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
             'Authorization': `Bearer ${token}`
         },
 
-        // Convertit l'objet newWorkData en Json (au format texte)
         body: formData
     };
 
@@ -293,11 +291,12 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
         //Ajoute le work à la variable globale
         WorksSet.add(jsonWork);
         
-        //Ajoute le work à la gallerie
-        AddWorkToGallery(jsonWork);
+        //Ajoute le work dans la gallerie uniquement si le filtre sélectionné correspond à l'id de catégorie ou sur tous
+        if (IsSelectedCategory(categoryId, true)){
+            //Ajoute le work à la gallerie
+            AddWorkToGallery(jsonWork);
+        }
         
-        //Ajoute le work à la modale
-        AddWorkToModal(jsonWork);
         console.log("Le work a été inséré avec succès.");
         
         return {
@@ -335,7 +334,7 @@ async function DeleteWorkByIdAsync(workId) {
     const token = window.localStorage.getItem("token");
     if (token === null || token === "") {
         console.error("Impossible de restituer le token de l'utilisateur, connectez-vous !");
-        window.location.href = "login.html";
+        alert("Impossible de restituer le token de l'utilisateur, connectez-vous !");
         return;
     }
 

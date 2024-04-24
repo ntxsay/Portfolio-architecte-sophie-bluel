@@ -159,7 +159,7 @@ const onWorkPhotoSubmitted = async function (event) {
     const selectedFile = document.querySelector("#addPhotoInput").files[0];
     const titleInputValue = document.querySelector("#workProjectName").value;
     const selectCategory = document.querySelector("#workCategoryName");
-    const selectedCategory = selectCategory.options[selectCategory.selectedIndex].value;
+    const selectedCategory = parseInt(selectCategory.options[selectCategory.selectedIndex].value);
     const fileBlob = await ConvertFileToBlobAsync(selectedFile);
 
     const spanError = document.querySelector("#works-add-photo-container span.error-msg");
@@ -330,7 +330,7 @@ function IsWorkFormValid() {
     }
 
     const selectCategory = document.querySelector("#workCategoryName");
-    if (selectCategory.selectedIndex === -1) {
+    if (selectCategory.selectedIndex <= 0) {
         spanError.innerText = "Vous devez sélectionner une catégorie.";
         spanError.style.display = "block";
         console.error(spanError.innerText);
@@ -559,6 +559,13 @@ function CreateNewWorkInfos(form) {
     selectCategory.required = true;
     projectInfosContainer.appendChild(selectCategory);
 
+    //Création de l'option par défaut
+    const selectCategoryOption = document.createElement("option");
+    selectCategoryOption.value = "";
+    selectCategoryOption.text = "Sélectionnez une catégorie";
+    selectCategoryOption.hidden = true;
+    selectCategory.add(selectCategoryOption, null);
+    
     CategoriesSet.forEach((category) => {
         const categoryOption = document.createElement("option");
         categoryOption.value = category.id.toString();
@@ -641,12 +648,8 @@ function ConvertFileToBlobAsync(file) {
         const reader = new FileReader();
 
         reader.onload = (event) => {
-            
             // Le contenu du fichier est dans event.target.result
             const fileBlob = new Blob([event.target.result], { type: file.type });
-            
-            // Utiliser le blob comme nécessaire
-            console.log("Blob du fichier:", fileBlob);
             resolve(fileBlob);
         };
         

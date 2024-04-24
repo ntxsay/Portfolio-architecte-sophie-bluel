@@ -1,3 +1,4 @@
+const filterAllIdName = "filter_all";
 /**
  * Nom de la clé contenant les catégories dans le LocalStorage
  * @type {string}
@@ -159,4 +160,35 @@ function UpdateCategories(categories) {
 
     //On enregistre le tableau dans le stockage local au format string json
     window.localStorage.setItem(categoriesLocalStorageName, JSON.stringify(Array.from(CategoriesSet)));
+}
+
+
+/**
+ * Retourne l'id du filtre dans le DOM correspondant à l'id de catégorie
+ * @param {number|null} idCategory Représente l'id de catégorie
+ * @returns {string|string}
+ */
+function GetFilterItemId(idCategory) {
+    //Si l'id de catégorie n'est pas spécifié
+    const isIdCategoryNotSpecified = idCategory === null || isNaN(idCategory);
+
+    //Nom de l'id du filtre à sélectionner
+    return isIdCategoryNotSpecified ? filterAllIdName : "filter_" + idCategory
+}
+
+/**
+ * Retourne une valeur booléenne indiquant si le filtre qui contient la catégorie spécifiée est sélectionnée
+ * @param {number|null} idCategory
+ * @param {boolean} allowWhenOnFilterAll Permet de considérer que la catégorie spécifié est sélectionné lorsque le filtre est sur "tous"
+ * @returns {boolean}
+ */
+function IsSelectedCategory(idCategory, allowWhenOnFilterAll) {
+    const filterItemLinkId = GetFilterItemId(idCategory);
+    
+    const filterItemLink = document.getElementById(filterItemLinkId);
+    if (!filterItemLink)
+        return false;
+    
+    const filterItemContainer = filterItemLink.parentElement;
+    return filterItemContainer.classList.contains("selected") || (filterItemLinkId === filterAllIdName && allowWhenOnFilterAll);
 }
