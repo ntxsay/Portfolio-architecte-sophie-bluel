@@ -1,17 +1,20 @@
-﻿const modal = document.getElementById("works-Editor-modal");
+﻿//Modale
+const modal = document.getElementById("works-Editor-modal");
 const modalBackBtn = document.querySelector("#works-Editor-modal .modal-back-button");
 const modalCloseBtn = document.querySelector("#works-Editor-modal .modal-close-button");
 
+//Conteneurs de la modales
 const modalManagerContainer = document.getElementById("modal-works-manager-container");
 const modalNewWorkContainer = document.getElementById("modal-new-work-container");
 
+//Elements de la liste des works
 const newWorkButton = document.getElementById("add-photo-btn");
 
+//Elements 
 const newWorkForm = modalNewWorkContainer.querySelector("form");
 const uploadImageInput = document.getElementById("addPhotoInput");
 const newWorkTitleInput = document.getElementById("workProjectName");
 const chooseCategorySelect = document.getElementById("workCategoryName");
-
 const submitNewWorkButton = document.getElementById("validate-photo-btn");
 
 
@@ -45,12 +48,32 @@ modal.addEventListener('click', function (eventClick) {
     CloseCurrentModal();
 });
 
+/**
+ * Se produit lorsque que l'élément sélectionné dans le slecteur de catégorie change.
+ * Elle a pour but de vérifier si le formulaire est valide et d'afficher une erreur le cas échéant
+ */
 chooseCategorySelect.addEventListener('change', IsWorkFormValid);
+
+/**
+ * Se produit lorsque que le titre du nouveau work change (après perte du focus)
+ * Elle a pour but de vérifier si le formulaire est valide et d'afficher une erreur le cas échéant
+ */
 newWorkTitleInput.addEventListener('change', IsWorkFormValid);
 
 /**
+ * Se produit lorsque l'utilateur clique sur le sélecteur de fichier
+ * Stoppe la propagation du clic du parent pour permettre au sélecteur de fichier d'afficher sa boite de dialogue
+ */
+uploadImageInput.parentElement.addEventListener('click', (e) => e.stopPropagation());
+
+/**
+ * Se produit lorsque l'utilateur clique sur le sélecteur de fichier
+ * Stoppe la propagation du clic du parent pour permettre à ce bouton de lancer la soumission du formulaire
+ */
+submitNewWorkButton.addEventListener('click', (e) => e.stopPropagation());
+
+/**
  * Se produit lorsque le formulaire est soumis
- * @param {SubmitEvent} event
  */
 newWorkForm.addEventListener('submit', async function (event) {
     event.preventDefault();
@@ -60,8 +83,7 @@ newWorkForm.addEventListener('submit', async function (event) {
 
     const selectedFile = uploadImageInput.files[0];
     const titleInputValue = newWorkTitleInput.value;
-    const selectCategory = document.querySelector("#workCategoryName");
-    const selectedCategory = parseInt(selectCategory.options[selectCategory.selectedIndex].value);
+    const selectedCategory = parseInt(chooseCategorySelect.options[chooseCategorySelect.selectedIndex].value);
     const fileBlob = await ConvertFileToBlobAsync(selectedFile);
 
     const result = await InsertWorkInDataBaseAsync(titleInputValue, selectedCategory, fileBlob, selectedFile.name);
@@ -78,14 +100,10 @@ newWorkForm.addEventListener('submit', async function (event) {
     CloseCurrentModal();
 });
 
-uploadImageInput.parentElement.addEventListener('click', (e) => e.stopPropagation());
-submitNewWorkButton.addEventListener('click', (e) => e.stopPropagation());
 
 /**
  * Fonction exécuté lorsque l'utilisateur a sélectionné un fichier dans le sélecteur de fichier
  * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
- * @param {Event} changeEvent
- * @param {HTMLInputElement} fileInput
  */
 uploadImageInput.addEventListener('change', async function () {
     const previewImg = document.getElementById("add-photo-preview-img");
@@ -139,6 +157,8 @@ function CloseCurrentModal() {
     modal.setAttribute("aria-modal", "false");
 
     HidePreview();
+    
+    //réinitialise le formulaire
     newWorkForm.reset();
 }
 
@@ -166,6 +186,7 @@ function IsWorkFormValid() {
         return false;
     }
 
+    //Si l'option par défaut est sélectionné
     if (chooseCategorySelect.selectedIndex <= 0) {
         DisplayFormErrorMessage("Vous devez sélectionner une catégorie.");
         return false;
@@ -216,6 +237,9 @@ function DisplayNewWorkForm() {
         newWorkButton.classList.add("disabled");
 }
 
+/**
+ * Masque l'image de prévisualisation
+ */
 function HidePreview(){
     const previewImg = document.getElementById("add-photo-preview-img");
     const previewImageContainer = previewImg.parentElement;
@@ -263,7 +287,8 @@ function HideFormErrorMessage(){
 }
 
 /**
- * Convertit un fichier en blob explicitement
+ * Convertit un fichier en blob explicitement.
+ * C'est sous ce format que sera mis en ligne le fichier
  * @param {File} file
  * @returns {Promise<unknown>}
  */

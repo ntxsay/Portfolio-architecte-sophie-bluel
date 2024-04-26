@@ -11,13 +11,11 @@ loginForm.addEventListener("submit", async (event) => {
     // Même si l'attribut required est présent sur les balise input on revérifie quand même en js
     const emailInputValue = loginForm.querySelector('#email').value;
 
-    if (emailInputValue === "") {
+    const mailRegex = /^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+$/;
+    if (emailInputValue === "" || !mailRegex.test(emailInputValue)) {
         connexionStatusErrorSpan.innerText = "L'e-mail n'est pas valide."
         return;
     }
-
-    //ajouter une vérification de l'email avec les expressions régulières
-    //..
 
     const passwordInputValue = loginForm.querySelector("#password").value;
 

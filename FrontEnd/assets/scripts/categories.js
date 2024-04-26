@@ -1,4 +1,15 @@
 /**
+ * Fonction de l'évènement click du bouton de filtre
+ * @param {MouseEvent} e
+ */
+const OnFilterClicked = async (e) => {
+    const button = e.target;
+
+    SelectFilterButton(button);
+    await GetWorksFromApiAsync(parseInt(button.value));
+}
+
+/**
  * Récupère toutes les catégories (filtres) depuis l'API
  * @param {boolean} selectFilterAll Indique à la fonction s'il doit sélectionner le bouton tous lors de la récupération des catégories
  */
@@ -38,11 +49,9 @@ async function GetFiltersFromApiAsync(selectFilterAll = true) {
         //Ajoute un élément html pour chaque catégories
         categories.forEach((category) => {
 
-            // Crée le bouton correspondant au filtre spécifié
+            // Crée le bouton correspondant au filtre spécifié et ajoute le bouton au conteneur
             const filterButton= CreateFilterButton(category.id, category.name);
             filterButton.onclick = OnFilterClicked;
-
-            //Ajoute le bouton au conteneur
             filterList.appendChild(filterButton);
             
             //Ajoute les catégories à l'élément option de la modale
@@ -55,17 +64,6 @@ async function GetFiltersFromApiAsync(selectFilterAll = true) {
         // Affiche un message d'erreur si la récupération des filtres échoue.
         console.error("Impossible de récupérer les filtres :", e);
     }
-}
-
-/**
- * Fonction de l'évènement click du bouton de filtre
- * @param {MouseEvent} e
- */
-const OnFilterClicked = async (e) => {
-    const button = e.target;
-    
-    SelectFilterButton(button);
-    await GetWorksFromApiAsync(parseInt(button.value));
 }
 
 /**
