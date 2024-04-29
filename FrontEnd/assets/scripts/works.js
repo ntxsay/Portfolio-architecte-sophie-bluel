@@ -127,7 +127,8 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
     formData.append('category', categoryId);
     formData.append('image', fileBlob, filename);
     
-    // Attention ne pas utiliser de content-type sous peine  de faire échouer la rêquete voir : https://stackoverflow.com/questions/35192841/how-do-i-post-with-multipart-form-data-using-fetch
+    // Attention ne pas utiliser de content-type sous peine  
+    // de faire échouer la rêquete voir : https://stackoverflow.com/questions/35192841/how-do-i-post-with-multipart-form-data-using-fetch
     const response = await fetch("http://localhost:5678/api/works", {
         method: 'POST',
         headers: {
@@ -139,15 +140,24 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
         console.error(error);
     });
 
-    if (!response.ok){
+    if (!response.ok) {
         return {
             isSucces: false,
             message: response.statusText
         };
     }
 
-    await GetWorksFromApiAsync(categoryId, false);
+    //Recharge tous les works
+    await GetWorksFromApiAsync(0, false);
+    
+    // Enlève la classe "selected" de tous les boutons "filter-item" pour les désélectionner.
+    document.querySelectorAll(".filter-item").forEach((b) => b.classList.remove("selected"));
 
+    // Ajoute la classe "selected" au bouton Tous pour le sélectionner.
+    const buttonAllCategories = Array.from(document.querySelectorAll(".filter-item")).filter(f => f.value === "0");
+    if (buttonAllCategories.length > 0)
+        buttonAllCategories[0].classList.add("selected");
+    
     return {
         isSucces: true,
         message: "Le work a été inséré avec succès."

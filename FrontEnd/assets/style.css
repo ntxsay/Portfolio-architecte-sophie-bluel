@@ -289,6 +289,7 @@ li:hover {
 #log_in a {
     text-align: center;
     font-size: 1.2em;
+    color: black;
 }
 
 input[type="submit"] {
