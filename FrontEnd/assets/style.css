@@ -55,16 +55,13 @@ table {
 
 /** end reset css**/
 body {
-    max-width: 1140px;
-    margin: auto;
     font-family: 'Work Sans';
     font-size: 14px;
 }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    margin: 50px 0
+main {
+    max-width: 1140px;
+    margin: auto;
 }
 
 section {
@@ -98,6 +95,33 @@ h2 {
     color: #1D6154
 }
 
+#edition-mode-header {
+    display: none;
+    margin: 0;
+    height: 59px;
+    background-color: black;
+    color: white;
+    font-size: 1.1em;
+}
+
+#edition-mode-header.isVisible {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#edition-mode-header i {
+    font-size: 1em;
+    margin-right: 11px;
+}
+
+.nav-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 50px auto;
+    max-width: 1140px;
+}
+
 nav ul {
     display: flex;
     align-items: center;
@@ -126,6 +150,19 @@ nav li.selected a {
 
 li:hover {
     color: #B1663C;
+}
+
+
+#logoutLink {
+    display: none;
+}
+
+#loginLink.logged {
+    display: none;
+}
+
+#logoutLink.logged {
+    display: block;
 }
 
 #introduction {
@@ -160,11 +197,12 @@ li:hover {
     width: 100%;
     align-items: baseline;
     justify-content: center;
+    margin-bottom: 51px;
+    margin-top: 139px;
 }
 
 #portfolio h2 {
     text-align: center;
-    margin-bottom: 1em;
     margin-right: 31px;
 }
 
@@ -187,15 +225,18 @@ li:hover {
     display: block;
 }
 
-    /**** Filtres ****/
+/**** Filtres ****/
 
 .filter-container {
-    margin: 50px 0;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
+}
+
+.filter-container.logged {
+    display: none;
 }
 
 .filter-container .filter-item {
@@ -219,6 +260,7 @@ li:hover {
 
 
 .gallery {
+    margin-top: 50px;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -278,12 +320,16 @@ li:hover {
 }
 
 #log_in .connexion-error, .error-msg {
-    display: inline-block;
+    display: none;
     margin: 2em 0 0 0;
     font-size: 1.2em;
     color: orangered;
     font-weight: 700;
     text-align: center;
+}
+
+#log_in .connexion-error, .error-msg.isVisible {
+    display: inline-block;
 }
 
 #log_in a {
@@ -397,7 +443,6 @@ button.modal-back-button {
     align-items: center;
     justify-content: center;
 }
-
 
 
 .modal-buttons-container a span {

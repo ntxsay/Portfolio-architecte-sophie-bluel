@@ -36,9 +36,7 @@ loginForm.addEventListener("submit", async (event) => {
     });
 
     if (!response.ok) {
-        connexionStatusErrorSpan.textContent = response.status === 404 
-            ? "L'email ou le mot de passe ne correspond pas."
-            : response.statusText;
+        connexionStatusErrorSpan.textContent = "L'email ou le mot de passe ne correspond pas.";
         return;
     }
 

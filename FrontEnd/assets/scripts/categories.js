@@ -17,10 +17,10 @@ async function GetFiltersFromApiAsync(selectFilterAll = true) {
     try {
         //Lance la requête afin de récupérer les catégories (filtres) depuis l'api
         const response = await fetch('http://localhost:5678/api/categories');
-        
+
         //Convertit la réponse au format json
         const categories = await response.json();
-        
+
         //S'il n'y a aucune catégorie à charger alors on sort de la fonction
         if (categories.length === 0)
             return;
@@ -32,7 +32,7 @@ async function GetFiltersFromApiAsync(selectFilterAll = true) {
         const filterButtonAll = CreateFilterButton("0", "Tous");
         filterButtonAll.onclick = OnFilterClicked;
         filterList.appendChild(filterButtonAll);
-        
+
         // Sélectionne le filtre "tous" si le paramètre le permet
         if (selectFilterAll)
             SelectFilterButton(filterButtonAll);
@@ -45,22 +45,22 @@ async function GetFiltersFromApiAsync(selectFilterAll = true) {
         selectCategoryOption.text = "Sélectionnez une catégorie";
         selectCategoryOption.hidden = true;
         modalSelect.add(selectCategoryOption, null);
-        
+
         //Ajoute un élément html pour chaque catégories
         categories.forEach((category) => {
 
             // Crée le bouton correspondant au filtre spécifié et ajoute le bouton au conteneur
-            const filterButton= CreateFilterButton(category.id, category.name);
+            const filterButton = CreateFilterButton(category.id, category.name);
             filterButton.onclick = OnFilterClicked;
             filterList.appendChild(filterButton);
-            
+
             //Ajoute les catégories à l'élément option de la modale
             const categoryOption = document.createElement("option");
             categoryOption.value = category.id.toString();
             categoryOption.text = category.name;
             modalSelect.add(categoryOption, null);
         });
-    } catch(e) {
+    } catch (e) {
         // Affiche un message d'erreur si la récupération des filtres échoue.
         console.error("Impossible de récupérer les filtres :", e);
     }
@@ -78,7 +78,7 @@ function CreateFilterButton(categoryId, categoryName) {
     button.classList.add("filter-item");
     button.value = categoryId;
     button.textContent = categoryName;
-    
+
     // Retourne le bouton créé.
     return button;
 }
@@ -90,7 +90,7 @@ function CreateFilterButton(categoryId, categoryName) {
 function SelectFilterButton(button) {
     // Enlève la classe "selected" de tous les boutons "filter-item".
     document.querySelectorAll(".filter-item").forEach((b) => b.classList.remove("selected"));
-    
+
     // Ajoute la classe "selected" au bouton cliqué.
     button.classList.add("selected");
 }

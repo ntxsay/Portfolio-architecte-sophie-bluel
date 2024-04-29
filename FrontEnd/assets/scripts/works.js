@@ -5,18 +5,18 @@ const editWorkButton = document.getElementById("works-open-modal-button");
  */
 editWorkButton.addEventListener('click', async function (eventClick) {
     eventClick.preventDefault();
-    
+
     //Récupère les works optimisés pour la modale
     await GetWorksFromApiAsync(0, true);
 
     //affiche la liste des 
-    
+
     if (modal.classList.contains("closed"))
         modal.classList.remove("closed");
 
     modal.setAttribute("aria-hidden", "false");
     modal.setAttribute("aria-modal", "true");
-    
+
     DisplayModalWorkManager();
 });
 
@@ -30,13 +30,13 @@ async function GetWorksFromApiAsync(categoryId = 0, isForModal = false) {
 
         //Lance la requête afin de récupérer les works depuis l'api
         const response = await fetch('http://localhost:5678/api/works');
-        
+
         //Convertit la réponse en Json
         const works = await response.json();
-        
+
         //Filtre les works en fonction de l'id de catégorie
-        const filteredWorks =  categoryId <= 0 
-            ? works 
+        const filteredWorks = categoryId <= 0
+            ? works
             : works.filter((work) => work.categoryId === Number(categoryId));
 
         // Récupère le conteneur des works
@@ -50,7 +50,7 @@ async function GetWorksFromApiAsync(categoryId = 0, isForModal = false) {
         //S'il n'y a aucun works à charger alors on sort de la fonction
         if (filteredWorks.length === 0)
             return;
-        
+
         //Ajoute chaque work à la galerie
         filteredWorks.forEach((work) => {
             const figure = CreateWork(work, isForModal);
@@ -101,7 +101,7 @@ function CreateWork(work, isForModal = false) {
         deleteIcon.classList.add("fa-solid", "fa-trash-can");
         deleteButton.appendChild(deleteIcon);
     }
-    
+
     //Retourne la figure
     return figure;
 }
@@ -111,12 +111,11 @@ function CreateWork(work, isForModal = false) {
  * Insère un nouveau work dans la base de données
  * @param {string} title représente le titre du work
  * @param {number} categoryId représente l'id de la catégorie sélectionnée
- * @param {Blob} fileBlob représente le contenu du fichier
- * @param {string} filename représente le nom du fichier incluant son extension
+ * @param {File} file représente le contenu du fichier
  * @returns {Promise<{isSucces: boolean, message: string}>}
  * @constructor
  */
-async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) {
+async function InsertWorkInDataBaseAsync(title, categoryId, file) {
     const token = window.localStorage.getItem("token");
 
     // Créer un objet FormData
@@ -125,8 +124,8 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
     // Ajouter les champs du formulaire
     formData.append('title', title);
     formData.append('category', categoryId);
-    formData.append('image', fileBlob, filename);
-    
+    formData.append('image', file, file.name);
+
     // Attention ne pas utiliser de content-type sous peine  
     // de faire échouer la rêquete voir : https://stackoverflow.com/questions/35192841/how-do-i-post-with-multipart-form-data-using-fetch
     const response = await fetch("http://localhost:5678/api/works", {
@@ -149,7 +148,7 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
 
     //Recharge tous les works
     await GetWorksFromApiAsync(0, false);
-    
+
     // Enlève la classe "selected" de tous les boutons "filter-item" pour les désélectionner.
     document.querySelectorAll(".filter-item").forEach((b) => b.classList.remove("selected"));
 
@@ -157,7 +156,7 @@ async function InsertWorkInDataBaseAsync(title, categoryId, fileBlob, filename) 
     const buttonAllCategories = Array.from(document.querySelectorAll(".filter-item")).filter(f => f.value === "0");
     if (buttonAllCategories.length > 0)
         buttonAllCategories[0].classList.add("selected");
-    
+
     return {
         isSucces: true,
         message: "Le work a été inséré avec succès."
@@ -185,16 +184,16 @@ async function DeleteWorkByIdAsync(workId) {
         console.error('Une erreur est survenue lors de la suppression de la ressource :', error);
     });
 
-    if (!response.ok){
+    if (!response.ok) {
         alert('Une erreur est survenue lors de la suppression de la ressource : ' + response.statusText);
         return;
     }
 
     // Supprime le Work dans la modale
     const modalFigures = document.querySelectorAll("#modal-works-manager-container .works-list figure");
-    if (modalFigures.length > 0){
+    if (modalFigures.length > 0) {
         const filteredFigures = Array.from(modalFigures).filter((f) => f.dataset.id === workId.toString());
-        if (filteredFigures.length > 0){
+        if (filteredFigures.length > 0) {
             const gallery = document.querySelector("#modal-works-manager-container .works-list");
             gallery.removeChild(filteredFigures[0]);
         }
@@ -202,11 +201,11 @@ async function DeleteWorkByIdAsync(workId) {
 
     // Supprime le Work dans la modale
     const figures = document.querySelectorAll("#portfolio .gallery figure");
-    if (figures.length > 0){
+    if (figures.length > 0) {
         const filteredFigures = Array.from(figures).filter((f) => f.dataset.id === workId.toString());
-        if (filteredFigures.length > 0){
+        if (filteredFigures.length > 0) {
             const gallery = document.querySelector("#portfolio .gallery");
             gallery.removeChild(filteredFigures[0]);
-        } 
+        }
     }
 }

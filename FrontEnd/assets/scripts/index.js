@@ -11,28 +11,46 @@ document.addEventListener('DOMContentLoaded', async function () {
     await GetWorksFromApiAsync();
 
     const token = window.localStorage.getItem("token");
-    if (token === null || token === ""){
-        logoutLinkElement.style.display = "none";
-        loginLinkElement.style.display = "block";
-    } else {
-        logoutLinkElement.style.display = "block";
-        loginLinkElement.style.display = "none";
+    if (token !== null && token !== ""){
+        if (!logoutLinkElement.classList.contains("logged"))
+            logoutLinkElement.classList.add("logged");
+        if (!loginLinkElement.classList.contains("logged"))
+            loginLinkElement.classList.add("logged");
 
+        const filterContainer = document.querySelector("#portfolio .filter-container");
+        if (!filterContainer.classList.contains("logged"))
+            filterContainer.classList.add("logged");
+        
         const openModalButton = document.getElementById("works-open-modal-button");
         if (!openModalButton.classList.contains("isVisible"))
             openModalButton.classList.add("isVisible");
+        const modeEditionContainer = document.getElementById("edition-mode-header");
+        if (!modeEditionContainer.classList.contains("isVisible"))
+            modeEditionContainer.classList.add("isVisible");
     }
 });
 
 logoutLinkElement.addEventListener('click', function (){
     window.localStorage.removeItem("token");
-    logoutLinkElement.style.display = "none";
-    loginLinkElement.style.display = "block";
+    
+    if (logoutLinkElement.classList.contains("logged"))
+        logoutLinkElement.classList.remove("logged");
+    if (loginLinkElement.classList.contains("logged"))
+        loginLinkElement.classList.remove("logged");
     
     const openModalButton = document.getElementById("works-open-modal-button");
     if (openModalButton.classList.contains("isVisible"))
         openModalButton.classList.remove("isVisible");
-})
+
+    const modeEditionContainer = document.getElementById("edition-mode-header");
+    if (modeEditionContainer.classList.contains("isVisible"))
+        modeEditionContainer.classList.remove("isVisible");
+
+    const filterContainer = document.querySelector("#portfolio .filter-container");
+    if (filterContainer.classList.contains("logged"))
+        filterContainer.classList.remove("logged");
+
+});
 
 
 /*

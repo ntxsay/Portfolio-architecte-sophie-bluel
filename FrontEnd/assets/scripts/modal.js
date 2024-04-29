@@ -84,12 +84,11 @@ newWorkForm.addEventListener('submit', async function (event) {
     const selectedFile = uploadImageInput.files[0];
     const titleInputValue = newWorkTitleInput.value;
     const selectedCategory = parseInt(chooseCategorySelect.options[chooseCategorySelect.selectedIndex].value);
-    const fileBlob = await ConvertFileToBlobAsync(selectedFile);
 
-    const result = await InsertWorkInDataBaseAsync(titleInputValue, selectedCategory, fileBlob, selectedFile.name);
+    const result = await InsertWorkInDataBaseAsync(titleInputValue, selectedCategory, selectedFile);
 
     //Si l'insertion est un échec alors on affiche l'erreur sans fermer la modale
-    if (!result.isSucces){
+    if (!result.isSucces) {
         DisplayFormErrorMessage(result.message, false);
         return;
     }
@@ -123,7 +122,7 @@ uploadImageInput.addEventListener('change', async function () {
             : "Un seul fichier doit être sélectionné.");
         return;
     }
-    
+
     //Masque le sélecteur de fichier
     const addPhotoContainer = modalNewWorkContainer.querySelector(".works-input-photo-container");
     if (!addPhotoContainer.classList.contains("hidden"))
@@ -131,7 +130,7 @@ uploadImageInput.addEventListener('change', async function () {
 
     //Récupère le premier fichier
     const currentFileSelected = selectedFiles[0];
-    
+
     //Ajoute les données du fichier à l'image
     previewImg.src = URL.createObjectURL(currentFileSelected);
     previewImg.alt = previewImg.title = currentFileSelected.name;
@@ -140,8 +139,7 @@ uploadImageInput.addEventListener('change', async function () {
     if (previewImageContainer.classList.contains("hidden"))
         previewImageContainer.classList.remove("hidden");
 
-    //Masque l'erreur
-    HideFormErrorMessage();
+    IsWorkFormValid();
 });
 
 /**
@@ -157,7 +155,7 @@ function CloseCurrentModal() {
     modal.setAttribute("aria-modal", "false");
 
     HidePreview();
-    
+
     //réinitialise le formulaire
     newWorkForm.reset();
 }
@@ -170,8 +168,8 @@ function IsWorkFormValid() {
 
     const selectedFiles = uploadImageInput.files;
     if (selectedFiles.length !== 1) {
-        DisplayFormErrorMessage(selectedFiles.length === 0 
-            ? "Aucun fichier n'a été sélectionné." 
+        DisplayFormErrorMessage(selectedFiles.length === 0
+            ? "Aucun fichier n'a été sélectionné."
             : "Un seul fichier doit être sélectionné.");
         return false;
     }
@@ -191,8 +189,8 @@ function IsWorkFormValid() {
         DisplayFormErrorMessage("Vous devez sélectionner une catégorie.");
         return false;
     }
-    
-   HideFormErrorMessage();
+
+    HideFormErrorMessage();
 
     return true;
 }
@@ -204,7 +202,7 @@ function DisplayModalWorkManager() {
     //Masque le bouton de retour
     if (modalBackBtn.classList.contains("can-back-true"))
         modalBackBtn.classList.remove("can-back-true");
-    
+
     //Masque le conteneur du formulaire de création de work
     if (modalNewWorkContainer.classList.contains("selected"))
         modalNewWorkContainer.classList.remove("selected");
@@ -212,9 +210,11 @@ function DisplayModalWorkManager() {
     //Affiche le conteneur de la liste des works
     if (!modalManagerContainer.classList.contains("selected"))
         modalManagerContainer.classList.add("selected");
-    
+
     //Réinitialise la form
     newWorkForm.reset();
+    HideFormErrorMessage(true);
+    HidePreview();
 }
 
 /**
@@ -228,11 +228,11 @@ function DisplayNewWorkForm() {
     //Masque la liste de works
     if (modalManagerContainer.classList.contains("selected"))
         modalManagerContainer.classList.remove("selected");
-    
+
     //Affiche le formulaire de création de work
     if (!modalNewWorkContainer.classList.contains("selected"))
         modalNewWorkContainer.classList.add("selected");
-    
+
     if (!newWorkButton.classList.contains("disabled"))
         newWorkButton.classList.add("disabled");
 }
@@ -240,7 +240,7 @@ function DisplayNewWorkForm() {
 /**
  * Masque l'image de prévisualisation
  */
-function HidePreview(){
+function HidePreview() {
     const previewImg = document.getElementById("add-photo-preview-img");
     const previewImageContainer = previewImg.parentElement;
 
@@ -248,7 +248,7 @@ function HidePreview(){
     const addPhotoContainer = modalNewWorkContainer.querySelector(".works-input-photo-container");
     if (addPhotoContainer.classList.contains("hidden"))
         addPhotoContainer.classList.remove("hidden");
-    
+
     //Ajoute les données du fichier à l'image
     previewImg.src = "";
     previewImg.alt = "Prévisualisation de l'image"
@@ -261,54 +261,42 @@ function HidePreview(){
 /**
  * Affiche un message d'erreur
  * @param {string} message
- * @param {boolean} disableValidationButtonStyle Si true désactive le bouton (style) 
+ * @param {boolean} disableSubmitButton Si true désactive le bouton (style)
  */
-function DisplayFormErrorMessage(message, disableValidationButtonStyle = true) {
+function DisplayFormErrorMessage(message, disableSubmitButton = true) {
     const spanError = modalNewWorkContainer.querySelector(".error-msg");
     spanError.textContent = message;
-    spanError.style.display = "block";
-    
-    if (!disableValidationButtonStyle)
+
+    if (!spanError.classList.contains("isVisible"))
+        spanError.classList.add("isVisible");
+
+    if (!disableSubmitButton)
         return;
 
+    submitNewWorkButton.disabled = true;
     if (!submitNewWorkButton.classList.contains("disabled"))
-        submitNewWorkButton.classList.add("disabled");}
-
-/**
- * Masque le message d'erreur
- */
-function HideFormErrorMessage(){
-    const spanError = modalNewWorkContainer.querySelector(".error-msg");
-    spanError.textContent = "";
-    spanError.style.display = "none";
-
-    if (submitNewWorkButton.classList.contains("disabled"))
-        submitNewWorkButton.classList.remove("disabled");
+        submitNewWorkButton.classList.add("disabled");
 }
 
 /**
- * Convertit un fichier en blob explicitement.
- * C'est sous ce format que sera mis en ligne le fichier
- * @param {File} file
- * @returns {Promise<unknown>}
+ * Masque le message d'erreur
+ * @param {boolean} disableSubmitButton
  */
-function ConvertFileToBlobAsync(file) {
-    return new Promise((resolve, reject) => {
-        
-        // Lire le fichier comme un Blob
-        const reader = new FileReader();
+function HideFormErrorMessage(disableSubmitButton = false) {
+    const spanError = modalNewWorkContainer.querySelector(".error-msg");
+    spanError.textContent = "";
+    if (spanError.classList.contains("isVisible"))
+        spanError.classList.remove("isVisible");
 
-        reader.onload = (event) => {
-            // Le contenu du fichier est dans event.target.result
-            const fileBlob = new Blob([event.target.result], { type: file.type });
-            resolve(fileBlob);
-        };
-        
-        reader.onerror = (error) => {
-            console.error(error)
-            reject(error);
-        };
+    if (disableSubmitButton) {
+        submitNewWorkButton.disabled = true;
 
-        reader.readAsArrayBuffer(file);
-    });
+        if (!submitNewWorkButton.classList.contains("disabled"))
+            submitNewWorkButton.classList.add("disabled");
+    } else {
+        submitNewWorkButton.disabled = false;
+
+        if (submitNewWorkButton.classList.contains("disabled"))
+            submitNewWorkButton.classList.remove("disabled");
+    }
 }
